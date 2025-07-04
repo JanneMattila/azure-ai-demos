@@ -1,0 +1,132 @@
+# https://learn.microsoft.com/en-us/azure/ai-services/agents/quickstart?pivots=rest-api
+@azureAIAgentsEndpoint = {{$dotenv azureAIAgentsEndpoint}}
+# az account get-access-token --resource "https://ml.azure.com/" --query accessToken -o tsv | clip
+@azureAIAgentsToken = {{$dotenv azureAIAgentsToken}}
+
+###
+GET {{azureAIAgentsEndpoint}}/assistants?api-version=2024-12-01-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+###
+# @name assistantResponse
+POST {{azureAIAgentsEndpoint}}/assistants?api-version=2024-12-01-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+{
+  "instructions": "You are a weather bot. Use the provided functions to answer questions about the weather.",
+  "name": "my-weather-bot",
+  "model": "gpt-4o-mini",
+  "tools": [{
+    "type": "openapi",
+    "openapi": {
+      "name": "weatherapp",
+      "description": "Tool to get weather data",
+      "auth": {
+        "type": "anonymous"
+      },
+      "spec": {
+        "openapi": "3.1.0",
+        "info": {
+            "title": "get weather data",
+            "description": "Retrieves current weather data for a location.",
+            "version": "v1.0.0"
+        },
+        "servers": [{
+            "url": "https://wttr.in"
+        }],
+        "auth": [],
+        "paths": {
+            "/{location}": {
+                "get": {
+                    "description": "Get weather information for a specific location",
+                    "operationId": "GetCurrentWeather",
+                    "parameters": [
+                    {
+                        "name": "location",
+                        "in": "path",
+                        "description": "City or location to retrieve the weather for",
+                        "required": true,
+                        "schema": {
+                        "type": "string"
+                        }
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "description": "Format in which to return data. Always use 3.",
+                        "required": true,
+                        "schema": {
+                        "type": "integer",
+                        "default": 3
+                        }
+                    }
+                    ],
+                    "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                        "text/plain": {
+                            "schema": {
+                            "type": "string"
+                            }
+                        }
+                        }
+                    },
+                    "404": {
+                        "description": "Location not found"
+                    }
+                    },
+                    "deprecated": false
+                }
+            }
+        },
+        "components": {
+            "schemes": { }
+        }
+      }
+    }
+  }]
+}
+
+###
+# @name threadResponse
+POST {{azureAIAgentsEndpoint}}/threads?api-version=2024-12-01-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+{}
+
+###
+# @name questionResponse1
+POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2024-12-01-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+{
+  "role": "user",
+  "content": "What is the weather in Seattle?"
+}
+
+###
+# @name runResponse1
+POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs?api-version=2024-12-01-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+{
+  "assistant_id": "{{assistantResponse.response.body.id}}"
+}
+
+###
+# @name runResponse2
+GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs/{{runResponse1.response.body.id}}?api-version=2024-12-01-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+###
+# @name messageResponse
+GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2024-12-01-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}

@@ -1,0 +1,12 @@
+@WeatherAPI_HostAddress = http://localhost:5023
+
+###
+GET {{WeatherAPI_HostAddress}}/openapi/v1.json
+
+###
+POST {{WeatherAPI_HostAddress}}/api/weather
+Content-Type: application/json
+
+{
+  "location": "New York"
+}
