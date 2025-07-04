@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherAPI", "src\WeatherAP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-SemanticKernel", "src\01-SemanticKernel\01-SemanticKernel.csproj", "{2D3DBDFA-9CD8-4DC7-BA52-4BB95DFFA4F5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-AzureAIAgentService", "src\01-AzureAIAgentService\01-AzureAIAgentService.csproj", "{83C37C11-F015-40F2-BDBC-3A8521D4FC9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{2D3DBDFA-9CD8-4DC7-BA52-4BB95DFFA4F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D3DBDFA-9CD8-4DC7-BA52-4BB95DFFA4F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D3DBDFA-9CD8-4DC7-BA52-4BB95DFFA4F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83C37C11-F015-40F2-BDBC-3A8521D4FC9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83C37C11-F015-40F2-BDBC-3A8521D4FC9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83C37C11-F015-40F2-BDBC-3A8521D4FC9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83C37C11-F015-40F2-BDBC-3A8521D4FC9D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -30,6 +36,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CBA90C75-8BBB-47C7-B4A8-67828894D8E7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{2D3DBDFA-9CD8-4DC7-BA52-4BB95DFFA4F5} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{83C37C11-F015-40F2-BDBC-3A8521D4FC9D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9838186D-E5BD-4CD6-90A6-A5A6599DA30C}

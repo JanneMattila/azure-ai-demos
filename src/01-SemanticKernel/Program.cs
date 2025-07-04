@@ -35,8 +35,8 @@ var chatMessages = new List<ChatMessageContent>();
 while (true)
 {
     Console.Write("> ");
-    var inputFromUser = Console.ReadLine();
-    chatMessages.Add(new ChatMessageContent(AuthorRole.User, inputFromUser));
+    var input = Console.ReadLine();
+    chatMessages.Add(new ChatMessageContent(AuthorRole.User, input));
 
     Console.WriteLine("Response: ");
 
