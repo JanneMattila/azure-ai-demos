@@ -15,5 +15,41 @@ var deploymentName = configuration["DEPLOYMENT_NAME"] ?? "gpt-4.1-nano";
 AIProjectClient foundryClient = new(new Uri(endpoint), new DefaultAzureCredential());
 ChatClient chatClient = foundryClient.GetAzureOpenAIChatClient(deploymentName: deploymentName);
 
-ChatCompletion response = await chatClient.CompleteChatAsync(new UserChatMessage("Hello!"));
-Console.WriteLine($"Response: {response.Content[0].Text}");
+var chatMessages = new List<ChatMessage>();
+
+while (true)
+{
+    Console.Write("> ");
+    var input = Console.ReadLine();
+    if (string.IsNullOrWhiteSpace(input))
+    {
+        Console.WriteLine("Exiting...");
+        break;
+    }
+
+    Console.WriteLine("Response: ");
+
+    string chatResponse = string.Empty;
+    chatMessages.Add(new UserChatMessage(input));
+    await foreach (StreamingChatCompletionUpdate response in chatClient.CompleteChatStreamingAsync(chatMessages))
+    {
+        if (response.ContentUpdate.Count == 0)
+        {
+            continue; // Skip if no content update
+        }
+
+        foreach (var contentUpdate in response.ContentUpdate)
+        {
+            if (contentUpdate.Kind == ChatMessageContentPartKind.Text)
+            {
+                chatResponse += contentUpdate.Text;
+                Console.Write(contentUpdate.Text);
+            }
+        }
+    }
+
+    chatMessages.Add(new AssistantChatMessage(chatResponse));
+
+    Console.WriteLine();
+    Console.WriteLine();
+}
