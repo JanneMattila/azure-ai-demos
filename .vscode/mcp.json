@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "local-recommend-mcp-server": {
+      "type": "stdio",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "./src/01-MCPServer/01-MCPServer.csproj"
+      ]
+    }
+  }
+}
