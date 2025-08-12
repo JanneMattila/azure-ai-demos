@@ -1,4 +1,5 @@
-﻿using Azure.AI.Vision.ImageAnalysis;
+﻿using Azure.AI.Vision.Face;
+using Azure.AI.Vision.ImageAnalysis;
 using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using SixLabors.ImageSharp;
@@ -16,13 +17,16 @@ var endpoint = new Uri(configuration["ENDPOINT"] ?? "https://<your-endpoint>.cog
 var image = configuration["IMAGE_PATH"] ?? "/temp/vision/image1.jpg";
 
 ImageAnalysisClient client = new(endpoint, new DefaultAzureCredential());
-
-
+if (!File.Exists(image))
+{
+    Console.WriteLine($"Image file not found: {image}");
+    return;
+}
 ImageAnalysisResult result = client.Analyze(
     BinaryData.FromBytes(File.ReadAllBytes(image)),
     VisualFeatures.People | VisualFeatures.Tags | VisualFeatures.Objects,
     new ImageAnalysisOptions
-    { 
+    {
         GenderNeutralCaption = false
     });
 
@@ -51,17 +55,46 @@ foreach (var obj in result.Objects.Values)
 }
 
 string outputImagePath = Path.Combine(Path.GetDirectoryName(image) ?? string.Empty, "output_image.png");
-using (var imageStream = new FileStream(image, FileMode.Open, FileAccess.Read))
+using var imageStream = new FileStream(image, FileMode.Open, FileAccess.Read);
+using var outputImage = Image.Load(imageStream);
+foreach (var obj in result.Objects.Values)
 {
-    using var outputImage = Image.Load(imageStream);
-    foreach (var obj in result.Objects.Values)
-    {
-        var rect = new Rectangle(
-            (int)obj.BoundingBox.X,
-            (int)obj.BoundingBox.Y,
-            (int)obj.BoundingBox.Width,
-            (int)obj.BoundingBox.Height);
-        outputImage.Mutate(x => x.Draw(Color.Red, 2, rect));
-    }
-    outputImage.SaveAsPng(outputImagePath);
+    var rect = new Rectangle(
+        (int)obj.BoundingBox.X,
+        (int)obj.BoundingBox.Y,
+        (int)obj.BoundingBox.Width,
+        (int)obj.BoundingBox.Height);
+    outputImage.Mutate(x => x.Draw(Color.Red, 2, rect));
+}
+outputImage.SaveAsPng(outputImagePath);
+
+FaceClient faceClient = new(endpoint, new DefaultAzureCredential());
+
+// Specify facial features to be retrieved
+FaceAttributeType[] features =
+[
+    FaceAttributeType.Detection01.HeadPose,
+    FaceAttributeType.Detection01.Occlusion,
+    FaceAttributeType.Detection01.Accessories,
+    FaceAttributeType.Detection01.Glasses
+];
+
+// Use client to detect faces in an image
+using var imageData = File.OpenRead(image);
+var response = await faceClient.DetectAsync(
+    BinaryData.FromStream(imageData),
+    FaceDetectionModel.Detection01,
+    FaceRecognitionModel.Recognition01,
+    returnFaceId: true,
+    returnFaceAttributes: features);
+IReadOnlyList<FaceDetectionResult> detectedFaces = response.Value;
+
+Console.WriteLine($"Detected {detectedFaces.Count} faces in the image.");
+
+foreach (var detectedFace in detectedFaces)
+{
+    Console.WriteLine($"- {detectedFace.FaceId} at {detectedFace.FaceRectangle}");
+    Console.WriteLine($"  {detectedFace.FaceAttributes.FacialHair}");
+    Console.WriteLine($"  {detectedFace.FaceAttributes.Age}");
+    Console.WriteLine($"  {detectedFace.FaceAttributes.Mask}");
 }
