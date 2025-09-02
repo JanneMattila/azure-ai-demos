@@ -26,8 +26,6 @@ var kernelBuilder = Kernel.CreateBuilder();
 var azureClient = new AzureOpenAIClient(endpoint, new DefaultAzureCredential());
 kernelBuilder.AddAzureOpenAIChatCompletion(deploymentName, azureClient);
 
-kernelBuilder.Services.AddSingleton(new SearchIndexClient(aiSearchEndpoint, new DefaultAzureCredential()));
-kernelBuilder.Services.AddAzureAISearchVectorStore();
 kernelBuilder.AddVectorStoreTextSearch<SearchDocument>();
 kernelBuilder.Services.AddAzureAISearchCollection<SearchDocument>(aiSearchIndex, aiSearchEndpoint, new DefaultAzureCredential());
 
