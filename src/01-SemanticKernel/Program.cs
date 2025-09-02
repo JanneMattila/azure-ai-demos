@@ -47,7 +47,6 @@ var agent = new ChatCompletionAgent
     Kernel = kernel,
     Instructions = @"
         You are chat agent teaching user about semantic kernel.
-        Start by telling small 'did you know' thing about semantic kernel.
 
         Start by telling a small 'did you know' thing about Semantic Kernel.
         
