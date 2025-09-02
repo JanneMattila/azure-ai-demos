@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-Vision", "src\01-Vision\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "02-SemanticKernelSearch", "src\02-SemanticKernelSearch\02-SemanticKernelSearch.csproj", "{4904DD35-5538-4773-9937-86B2CCEAA8FD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-Evaluation", "src\01-Evaluation\01-Evaluation.csproj", "{F358E907-C614-48C5-A637-396C1EC434F8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{4904DD35-5538-4773-9937-86B2CCEAA8FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4904DD35-5538-4773-9937-86B2CCEAA8FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4904DD35-5538-4773-9937-86B2CCEAA8FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F358E907-C614-48C5-A637-396C1EC434F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F358E907-C614-48C5-A637-396C1EC434F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F358E907-C614-48C5-A637-396C1EC434F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F358E907-C614-48C5-A637-396C1EC434F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -65,6 +71,7 @@ Global
 		{32692D7D-D8A6-4D26-A68A-D126DB2B2590} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{AFD96165-A812-4E95-83D2-FE45A4886027} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{4904DD35-5538-4773-9937-86B2CCEAA8FD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F358E907-C614-48C5-A637-396C1EC434F8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9838186D-E5BD-4CD6-90A6-A5A6599DA30C}
