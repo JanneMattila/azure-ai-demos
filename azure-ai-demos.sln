@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "02-SemanticKernelSearch", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-Evaluation", "src\01-Evaluation\01-Evaluation.csproj", "{F358E907-C614-48C5-A637-396C1EC434F8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "02-EvaluationFoundry", "src\02-EvaluationFoundry\02-EvaluationFoundry.csproj", "{BBFC713A-E1A9-44F6-A0B1-3CAB18A54E23}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{F358E907-C614-48C5-A637-396C1EC434F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F358E907-C614-48C5-A637-396C1EC434F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F358E907-C614-48C5-A637-396C1EC434F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBFC713A-E1A9-44F6-A0B1-3CAB18A54E23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBFC713A-E1A9-44F6-A0B1-3CAB18A54E23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBFC713A-E1A9-44F6-A0B1-3CAB18A54E23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBFC713A-E1A9-44F6-A0B1-3CAB18A54E23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -72,6 +78,7 @@ Global
 		{AFD96165-A812-4E95-83D2-FE45A4886027} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{4904DD35-5538-4773-9937-86B2CCEAA8FD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{F358E907-C614-48C5-A637-396C1EC434F8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{BBFC713A-E1A9-44F6-A0B1-3CAB18A54E23} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9838186D-E5BD-4CD6-90A6-A5A6599DA30C}
