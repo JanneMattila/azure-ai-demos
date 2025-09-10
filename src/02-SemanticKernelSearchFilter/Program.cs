@@ -74,15 +74,19 @@ while (true)
     string chatResponse = string.Empty;
     var response = kernel.InvokePromptStreamingAsync(
         promptTemplate: """
-                    Please use this information to answer the question:
+                    Please use this information to answer the question between lines marked with --- below:
 
+                    ---
                     {{results}}  
+                    ---
 
                     Include citations to the relevant information where it is referenced in the response.
+                    If no information is found, then please politely say to the user that you could not find any
+                    relevant information and that can they clarify their request a bit.
 
                     Question: {{question}}
 
-                    Add table of citations at the end of your answer.
+                    Add table of citations at the end of your answer only if you used any citations in your answer.
                     """,
         arguments: new KernelArguments()
         {
