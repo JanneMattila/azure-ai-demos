@@ -1,16 +1,10 @@
-﻿using Azure;
-using Azure.AI.OpenAI;
+﻿using Azure.AI.OpenAI;
 using Azure.Identity;
 using Azure.Search.Documents;
-using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Models;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Identity.Client;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Data;
 using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
 using System.Text;
 
@@ -49,6 +43,7 @@ while (true)
     {
         VectorSearch = new()
         {
+            FilterMode = VectorFilterMode.PreFilter,
             Queries =
             { 
                 new VectorizableTextQuery(input)
@@ -57,7 +52,7 @@ while (true)
                 } 
             }
         },
-        Filter = $"author eq '{author}'",
+        Filter = SearchFilter.Create($"author eq {author}"),
         Select = { "title", "author", "date", "path", "modified", "chunk" }
     });
 
