@@ -8,6 +8,14 @@
         "--project",
         "./src/01-MCPServer/01-MCPServer.csproj"
       ]
-    }
+    },
+    // "microsoft-docs": {
+		// 	"url": "https://learn.microsoft.com/api/mcp",
+		// 	"type": "http"
+		// },
+		// "my-apim-learn": {
+		// 	"url": "https://<apim>.azure-api.net/learn",
+		// 	"type": "http"
+		// }
   }
 }
