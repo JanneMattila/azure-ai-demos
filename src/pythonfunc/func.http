@@ -1,0 +1,16 @@
+@func = http://localhost:7071
+
+### Upload excel file
+POST {{func}}/api/Converter HTTP/1.1
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+< /GitHub/JanneMattila/python-examples/excel/employees.xlsx
+
+# Returns the following markdown:
+# -------------------------------
+# ## Employees
+# | Name | Department | Salary |
+# | --- | --- | --- |
+# | Alice | Finance | 70000 |
+# | Bob | IT | 80000 |
+# | Charlie | HR | 65000 |
