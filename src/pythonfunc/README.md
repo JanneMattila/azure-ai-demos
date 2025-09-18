@@ -22,7 +22,7 @@ pip install -r requirements.txt
 func start
 
 # Deploy
-$funcApp = "pythonfuncdemo"
-$accessToken = (Get-AzAccessToken).Token
+$funcApp = "pythonfuncdemo..."
+$accessToken = (Get-AzAccessToken).Token | ConvertFrom-SecureString -AsPlainText
 func azure functionapp publish $funcApp --access-token $accessToken
 ```
