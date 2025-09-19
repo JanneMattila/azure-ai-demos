@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
+using ModelContextProtocol.Client;
 
 var builder = new ConfigurationBuilder()
     .AddEnvironmentVariables()
@@ -21,8 +22,23 @@ var randomNumberFunction = KernelFunctionFactory.CreateFromMethod(
     functionName: "GetRandomNumber",
     description: "Generates a random number between 1 and 99");
 
+// Create an MCPClient for the Microsoft Learn MCP endpoint
+await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new SseClientTransport(new()
+{
+    Name = "Microsoft Learn",
+    Endpoint = new Uri("https://learn.microsoft.com/api/mcp")
+}));
+
+// Retrieve the list of tools available on the MCP server
+var tools = await mcpClient.ListToolsAsync();
+foreach (var tool in tools)
+{
+    Console.WriteLine($"{tool.Name}: {tool.Description}");
+}
+
 var kernelBuilder = Kernel.CreateBuilder();
 kernelBuilder.Plugins.AddFromFunctions("RandomPlugin", "Random number generation", [randomNumberFunction]);
+kernelBuilder.Plugins.AddFromFunctions("MCPLearn", tools.Select(aiFunction => aiFunction.AsKernelFunction()));
 
 if (useLocalModel)
 {
@@ -52,6 +68,7 @@ var agent = new ChatCompletionAgent
         
         You have access to the following functions:
         - GetRandomNumber: Generates a random number between 1 and 99
+        - Plus any dynamically loaded MCP tools (prefixed with Mcp_)
         
         When users ask for random numbers, use the GetRandomNumber function.",
     Arguments = new KernelArguments(new PromptExecutionSettings()
