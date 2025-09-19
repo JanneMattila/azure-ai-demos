@@ -1,6 +1,6 @@
 # MarkItDown
 
-[MarkItDown](https://github.com/microsoft/markitdown
+[MarkItDown](https://github.com/microsoft/markitdown)
 
 [MarkItDown MCP](https://github.com/microsoft/mcp#-markitdown)
 
