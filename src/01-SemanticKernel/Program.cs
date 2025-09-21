@@ -19,8 +19,15 @@ var useLocalModel = Convert.ToBoolean(configuration["USE_LOCAL_MODEL"] ?? "false
 
 var randomNumberFunction = KernelFunctionFactory.CreateFromMethod(
     method: () => Random.Shared.Next(1, 100),
-    functionName: "GetRandomNumber",
+    functionName: "get_random_number",
     description: "Generates a random number between 1 and 99");
+
+var troubleshootOrderFunction = KernelFunctionFactory.CreateFromMethod(
+    method: (string orderID) => $"Order {orderID} has been successfully processed.",
+    functionName: "troubleshoot_order",
+    description: @"
+        Troubleshoots order status. 
+        You need to have orderID in format 'ORD<order_number>'.");
 
 // Create an MCPClient for the Microsoft Learn MCP endpoint
 await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new SseClientTransport(new()
@@ -37,7 +44,12 @@ foreach (var tool in tools)
 }
 
 var kernelBuilder = Kernel.CreateBuilder();
-kernelBuilder.Plugins.AddFromFunctions("RandomPlugin", "Random number generation", [randomNumberFunction]);
+kernelBuilder.Plugins.AddFromFunctions("RandomNumber", "Random number generation", [randomNumberFunction]);
+kernelBuilder
+    .Plugins
+    .AddFromFunctions(
+        "TroubleshootOrder", "Order troubleshooting", 
+        [troubleshootOrderFunction]);
 kernelBuilder.Plugins.AddFromFunctions("MCPLearn", tools.Select(aiFunction => aiFunction.AsKernelFunction()));
 
 if (useLocalModel)
@@ -64,13 +76,7 @@ var agent = new ChatCompletionAgent
     Instructions = @"
         You are chat agent teaching user about semantic kernel.
 
-        Start by telling a small 'did you know' thing about Semantic Kernel.
-        
-        You have access to the following functions:
-        - GetRandomNumber: Generates a random number between 1 and 99
-        - Plus any dynamically loaded MCP tools (prefixed with Mcp_)
-        
-        When users ask for random numbers, use the GetRandomNumber function.",
+        Start by telling a small 'did you know' thing about Semantic Kernel.",
     Arguments = new KernelArguments(new PromptExecutionSettings()
     {
       FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()  
