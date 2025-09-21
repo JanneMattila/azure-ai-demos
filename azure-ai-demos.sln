@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "02-SemanticKernelSearchFilt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "02-SemanticKernelProcess", "src\02-SemanticKernelProcess\02-SemanticKernelProcess.csproj", "{303138CF-BFD7-4D1E-BE85-46EA09AFD383}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-SemanticKernelTravelAssistant", "src\01-SemanticKernelTravelAssistant\01-SemanticKernelTravelAssistant.csproj", "{CFA3E3EC-BB24-4494-AC70-23F69CEBCCB2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -77,6 +79,10 @@ Global
 		{303138CF-BFD7-4D1E-BE85-46EA09AFD383}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{303138CF-BFD7-4D1E-BE85-46EA09AFD383}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{303138CF-BFD7-4D1E-BE85-46EA09AFD383}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFA3E3EC-BB24-4494-AC70-23F69CEBCCB2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFA3E3EC-BB24-4494-AC70-23F69CEBCCB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFA3E3EC-BB24-4494-AC70-23F69CEBCCB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFA3E3EC-BB24-4494-AC70-23F69CEBCCB2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -93,6 +99,7 @@ Global
 		{BBFC713A-E1A9-44F6-A0B1-3CAB18A54E23} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{8D6B76D8-2FE9-41CC-83FC-A34685008BF0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{303138CF-BFD7-4D1E-BE85-46EA09AFD383} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{CFA3E3EC-BB24-4494-AC70-23F69CEBCCB2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9838186D-E5BD-4CD6-90A6-A5A6599DA30C}
