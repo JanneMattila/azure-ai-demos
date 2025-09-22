@@ -21,7 +21,7 @@ var getToday = KernelFunctionFactory.CreateFromMethod(
 );
 
 var getPreviousTravelsFunction = KernelFunctionFactory.CreateFromMethod(
-    method: GetPreviousTraveDetails(),
+    method: GetPreviousTravelDetails(),
     functionName: "get_previous_travels",
     description: "Returns a list of previous travels."
 );
@@ -39,11 +39,25 @@ var getHotelFunction = KernelFunctionFactory.CreateFromMethod(
     description: @"Finds a list of hotels in a specific city."
 );
 
+var getCarRentalsFunction = KernelFunctionFactory.CreateFromMethod(
+    method: GetCarRentals(),
+    functionName: "get_car_rentals",
+    description: @"Finds a list of car rentals in a specific city."
+);
+
+var getActivitiesFunction = KernelFunctionFactory.CreateFromMethod(
+    method: GetActivities(),
+    functionName: "get_activities",
+    description: @"Finds a list of activities in a specific city."
+);
+
 var kernelBuilder = Kernel.CreateBuilder();
 kernelBuilder.Plugins.AddFromFunctions("GetToday", "Date retrieval", [getToday]);
 kernelBuilder.Plugins.AddFromFunctions("GetPreviousTravels", "Previous travel retrieval", [getPreviousTravelsFunction]);
 kernelBuilder.Plugins.AddFromFunctions("GetFlights", "Flight retrieval", [getFlightsFunction]);
 kernelBuilder.Plugins.AddFromFunctions("GetHotels", "Hotel retrieval", [getHotelFunction]);
+kernelBuilder.Plugins.AddFromFunctions("GetCarRentals", "Car rental retrieval", [getCarRentalsFunction]);
+kernelBuilder.Plugins.AddFromFunctions("GetActivities", "Activity retrieval", [getActivitiesFunction]);
 
 var azureClient = new AzureOpenAIClient(endpoint, new DefaultAzureCredential());
 kernelBuilder.AddAzureOpenAIChatCompletion(deploymentName, azureClient);
@@ -57,7 +71,7 @@ var agent = new ChatCompletionAgent
         You are travel assistant helping users with their travel plans.
         User is Mr. John Doe. His travel preferences are as follows:
         - Home city is Helsinki and he departs from HEL airport.
-        - He prefers direct flights and economy class accommodations.
+        - He prefers direct flights and Economy class accommodations.
 
         Use the available functions to get today's date, look up previous travels,
         find flights, and find hotels.
@@ -66,17 +80,31 @@ var agent = new ChatCompletionAgent
         Use the following format to present options:
         For flights:
         Here is my recommendation for flight from <departure_city> (<departure_airport_code>) to <arrival_city> (<arrival_airport_code>:
-        <Airline> <Flight Number> Departure: <departure_week_day> <departure_time> Arrival: <arrival_week_day> <arrival_time> Duration: <duration> Class: <class> Price: <price>
+        <airline> <flight_number> Departure: <departure_week_day> <departure_time> Arrival: <arrival_week_day> <arrival_time> Duration: <duration> Class: <class> Price: <price>
         For hotels:
         Here is my recommendation for hotel in <city>:
-        <Hotel Name> Check-In: <Check-In Date> Check-Out: <Check-Out Date> Number of Guests: <Number of Guests> Price per Night: <Price per Night>
+        <hotel_name> Check-In: <check_in_date> Check-Out: <check_out_date> Number of Guests: <number_of_guests> Price per Night: <price_per_night>
+        For car rentals (if applicable):
+        Here is my recommendation for car rental in <city>:
+        <car_rental_company> Pick-Up: <pick_up_date> Drop-Off: <drop_off_date> Price per Day: <price_per_day>
         Use markdown tables to present the options in a clear and organized manner.
+        
+        If user wants to look for alternatives, you'll help them with that as well.
+
+        If user wants to find some additional activities, you'll help them by listing max. 5 options
+        but if they do not ask, you do not suggest any activities. Do not include these in the total costs.
+
+        Make sure you handle all the users requests in a single conversation.
+        Include total costs at the end when you present the options to the user.
+        Always ask for confirmation before finalizing the bookings to avoid any mistakes.
+        Remind them that they need to book any possible activities separately
+        as you will only finalize the flight, hotel, and car rental bookings.
 
         After you have received confirmation, then
         you can let user know that you're finalizing the travel arrangements
         and that they will get a confirmation email shortly including
         all the travel documents and calendar invites.
-        Provide relevant travel greetings at the end.",
+        Provide relevant travel greetings at the end after confirmation.",
     Arguments = new KernelArguments(new PromptExecutionSettings()
     {
         FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
@@ -86,12 +114,10 @@ var agent = new ChatCompletionAgent
 Console.WriteLine("Type your message. Ctrl + C to exit");
 
 var chatMessages = new List<ChatMessageContent>();
-var isInitialMessage = true;
-var initialMessage = @"
-I need to travel again to Stockholm next week Wednesday for 3 days.
+var initialMessage = @"I need to travel again to Stockholm next week Tuesday for 3 days.
 Book me my usual hotel and rent a car as well.
-Also, find something fun to do for Thursday evening.
-";
+Also, find something fun to do for Thursday evening.";
+var isInitialMessage = true;
 
 while (true)
 {
@@ -132,7 +158,7 @@ static DateTime GetToday()
     return DateTime.Now;
 }
 
-static Func<int, string> GetPreviousTraveDetails()
+static Func<int, string> GetPreviousTravelDetails()
 {
     return (int travelDetailsFromLastDays) =>
     {
@@ -194,6 +220,38 @@ static Func<string, DateTime, DateTime, int, string> GetHotels()
             |------------------|-------------------|-------------------|------------------|-----------------|
             | Contoso Hotel    | {checkInDate:yyyy-MM-dd} | {checkOutDate:yyyy-MM-dd} | {numberOfGuests}              | $150            |
             | Fabrikam Suites  | {checkInDate:yyyy-MM-dd} | {checkOutDate:yyyy-MM-dd} | {numberOfGuests}              | $180            |
+            ";
+    };
+}
+
+static Func<string, DateTime, DateTime, string> GetCarRentals()
+{
+    return (string city, DateTime checkInDate, DateTime checkOutDate) =>
+    {
+        Console.WriteLine($"<Function-GetCarRentals: Fetching car rentals in {city}>");
+        Console.WriteLine($"<Function-GetCarRentals: Check-In Date {checkInDate}, Check-Out Date {checkOutDate}>");
+        return $@"
+            Here are some car rental options in {city}:
+            | Car Rental Company | Pick-Up Date       | Drop-Off Date      | Price per Day |
+            |---------------------|--------------------|--------------------|----------------|
+            | Contoso Rentals     | {checkInDate:yyyy-MM-dd} | {checkOutDate:yyyy-MM-dd} | $50            |
+            | Fabrikam Rentals    | {checkInDate:yyyy-MM-dd} | {checkOutDate:yyyy-MM-dd} | $60            |
+            ";
+    };
+}
+
+static Func<string, DateTime, string> GetActivities()
+{
+    return (string city, DateTime date) =>
+    {
+        Console.WriteLine($"<Function-GetActivities: Fetching activities in {city}>");
+        Console.WriteLine($"<Function-GetActivities: Date {date}>");
+        return $@"
+            Here are some activity options in {city}:
+            | Activity Name      | Date               | Duration           | Price           |
+            |--------------------|--------------------|--------------------|------------------|
+            | City Tour          | {date:yyyy-MM-dd} | 3 hours           | $100            |
+            | Museum Visit       | {date.AddDays(1):yyyy-MM-dd} | 2 hours           | $50             |
             ";
     };
 }
