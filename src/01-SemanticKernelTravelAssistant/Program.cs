@@ -68,11 +68,15 @@ var agent = new ChatCompletionAgent
 {
     Kernel = kernel,
     Instructions = @"
-        You are travel assistant helping users with their travel plans.
+        You are friendly travel assistant helping users with their travel plans.
         User is Mr. John Doe. His travel preferences are as follows:
         - Home city is Helsinki and he departs from HEL airport.
         - He prefers direct flights and Economy class accommodations.
 
+        Do not mention that you're using tools to help you.
+        When calculating travel dates, include both the departure and return dates
+        (e.g., if departing on a Monday and returning on Wednesday, that counts as 3 days)
+        but remember that hotel stays are calculated by stayed nights only.
         Use the available functions to get today's date, look up previous travels,
         find flights, and find hotels.
         When you have gathered all the necessary information to make a booking,
@@ -87,12 +91,16 @@ var agent = new ChatCompletionAgent
         For car rentals (if applicable):
         Here is my recommendation for car rental in <city>:
         <car_rental_company> Pick-Up: <pick_up_date> Drop-Off: <drop_off_date> Price per Day: <price_per_day>
+        Remember to calculate the cost for car including fractional days as full days.
         Use markdown tables to present the options in a clear and organized manner.
         
-        If user wants to look for alternatives, you'll help them with that as well.
+        If user wants to look for alternative flights or hotels, you'll help them with that as well.
 
         If user wants to find some additional activities, you'll help them by listing max. 5 options
-        but if they do not ask, you do not suggest any activities. Do not include these in the total costs.
+        but if they do not ask, you do not suggest any activities.
+        You don't need to book the activities for them and you don't need to confirm them from user.
+        User can book the activities separately if they want to.
+        Do not include these in the total costs.
 
         Make sure you handle all the users requests in a single conversation.
         Include total costs at the end when you present the options to the user.
@@ -116,7 +124,7 @@ Console.WriteLine("Type your message. Ctrl + C to exit");
 var chatMessages = new List<ChatMessageContent>();
 var initialMessage = @"I need to travel again to Stockholm next week Tuesday for 3 days.
 Book me my usual hotel and rent a car as well.
-Also, find something fun to do for Thursday evening.";
+Also, find something fun to do for Wednesday evening.";
 var isInitialMessage = true;
 
 while (true)
@@ -195,15 +203,15 @@ static Func<string, string, DateTime, DateTime, string, string> GetFlights()
 
             | Airline       | Flight Number | Departure Time     | Arrival Time       | Duration | Class        | Price   |
             |---------------|---------------|--------------------|--------------------|----------|--------------|---------|
-            | Contoso Air   | CA123         | {departureTime:yyyy-MM-dd HH:mm} | {departureTime.AddHours(3):yyyy-MM-dd HH:mm} | 3h       | {travelClass} | $300    |
-            | Fabrikam Air  | FA456         | {departureTime.AddHours(1):yyyy-MM-dd HH:mm} | {departureTime.AddHours(4):yyyy-MM-dd HH:mm} | 3h       | {travelClass} | $320    |
+            | Contoso Air   | CA123         | {departureTime:yyyy-MM-dd} 8:30 | {departureTime.AddHours(3):yyyy-MM-dd} 11:30 | 3h       | {travelClass} | $300    |
+            | Fabrikam Air  | FA456         | {departureTime.AddHours(1):yyyy-MM-dd} 9:30 | {departureTime.AddHours(4):yyyy-MM-dd} 12:30 | 3h       | {travelClass} | $320    |
 
             Here are some return flight options from {arriveAirportCode} to {departureAirportCode}:
 
             | Airline       | Flight Number | Departure Time     | Arrival Time       | Duration | Class        | Price               |---------------|---------------|--------------------|--------------------|----------|--------------|---------|
             |---------------|---------------|--------------------|--------------------|----------|--------------|---------|
-            | Contoso Air   | CA789         | {returnTime:yyyy-MM-dd HH:mm} | {returnTime.AddHours(3):yyyy-MM-dd HH:mm} | 3h       | {travelClass} | $300    |  
-            | Fabrikam Air  | FA101         | {returnTime.AddHours(1):yyyy-MM-dd HH:mm} | {returnTime.AddHours(4):yyyy-MM-dd HH:mm} | 3h       | {travelClass} | $320    |
+            | Contoso Air   | CA789         | {returnTime:yyyy-MM-dd} 18:00 | {returnTime.AddHours(3):yyyy-MM-dd} 21:00 | 3h       | {travelClass} | $300    |  
+            | Fabrikam Air  | FA101         | {returnTime.AddHours(1):yyyy-MM-dd} 17:30 | {returnTime.AddHours(4):yyyy-MM-dd} 20:30 | 3h       | {travelClass} | $320    |
             ";
     };
 }
@@ -250,8 +258,8 @@ static Func<string, DateTime, string> GetActivities()
             Here are some activity options in {city}:
             | Activity Name      | Date               | Duration           | Price           |
             |--------------------|--------------------|--------------------|------------------|
-            | City Tour          | {date:yyyy-MM-dd} | 3 hours           | $100            |
-            | Museum Visit       | {date.AddDays(1):yyyy-MM-dd} | 2 hours           | $50             |
+            | City Tour          | {date:yyyy-MM-dd} 17:00 | 3 hours           | $100            |
+            | Museum Visit       | {date.AddDays(1):yyyy-MM-dd} 18:00 | 2 hours           | $50             |
             ";
     };
 }
