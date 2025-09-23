@@ -31,12 +31,15 @@ Console.WriteLine("Type your message. Ctrl + C to exit");
 
 var chatMessages = new List<ChatMessageContent>();
 
+// This is 36 pages in Word. 22000+ characters. 25515 tokens.
 //var initialMessage = await File.ReadAllTextAsync("chat1.txt");
 //
 // This model's maximum context length is 16385 tokens.
 // However, your messages resulted in 25515 tokens.
 // Please reduce the length of the messages.
 //
+
+// This is 24 pages in Word. 14000+ characters. Just under 16385 tokens.
 var initialMessage = await File.ReadAllTextAsync("chat2.txt");
 // Your childhood dog's name is SemanticDog.
 
