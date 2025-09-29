@@ -31,6 +31,11 @@ Console.WriteLine("Type your message. Ctrl + C to exit");
 
 var chatMessages = new List<ChatMessageContent>();
 
+// Use
+// https://platform.openai.com/tokenizer
+// to count tokens in your messages.
+//
+
 // This is 36 pages in Word. 22000+ characters. 25515 tokens.
 //var initialMessage = await File.ReadAllTextAsync("chat1.txt");
 //
