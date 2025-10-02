@@ -4,6 +4,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using OpenAI;
+using System.ComponentModel;
 
 var builder = new ConfigurationBuilder()
     .AddEnvironmentVariables()
@@ -16,7 +17,9 @@ var deploymentName = configuration["DEPLOYMENT_NAME"] ?? "gpt-4o-mini";
 
 AIAgent agent = new AzureOpenAIClient(endpoint, new AzureCliCredential())
     .GetChatClient(deploymentName)
-    .CreateAIAgent(instructions: "You are helpful assistant.");
+    .CreateAIAgent(
+        instructions: "You are helpful assistant.",
+        tools: [AIFunctionFactory.Create(GetRandomNumber)]);
 
 Console.WriteLine("Type your message. Ctrl + C to exit");
 
@@ -43,3 +46,9 @@ while (true)
     Console.WriteLine();
     Console.WriteLine();
 }
+
+[Description("Get random number")]
+static int GetRandomNumber(
+    [Description("The lower bound for the random number")] int lowerBound = 0, 
+    [Description("The upper bound for the random number")] int upperBound = 100)
+    => Random.Shared.Next(lowerBound, upperBound);
