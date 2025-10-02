@@ -38,25 +38,18 @@ AIAgent agent = new AzureOpenAIClient(endpoint, new AzureCliCredential())
 
 Console.WriteLine("Type your message. Ctrl + C to exit");
 
-var chatMessages = new List<ChatMessage>();
+AgentThread thread = agent.GetNewThread();
 
 while (true)
 {
     Console.Write("> ");
-    var input = Console.ReadLine();
-    chatMessages.Add(new ChatMessage(ChatRole.User, input));
+    var input = Console.ReadLine() ?? string.Empty;
 
     Console.WriteLine("Response: ");
-
-    string chatResponse = string.Empty;
-
-    await foreach (var response in agent.RunStreamingAsync(chatMessages))
+    await foreach (var response in agent.RunStreamingAsync(input, thread))
     {
-        chatResponse += response.Text;
         Console.Write(response.Text);
     }
-
-    chatMessages.Add(new ChatMessage(ChatRole.Assistant, chatResponse));
 
     Console.WriteLine();
     Console.WriteLine();
