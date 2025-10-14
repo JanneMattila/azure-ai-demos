@@ -30,7 +30,7 @@ var mcpTools = await mcpClient.ListToolsAsync();
 var tools = mcpTools.Cast<AITool>().ToList();
 tools.Add(AIFunctionFactory.Create(GetRandomNumber));
 
-AIAgent agent = new AzureOpenAIClient(endpoint, new AzureCliCredential())
+AIAgent agent = new AzureOpenAIClient(endpoint, new DefaultAzureCredential())
     .GetChatClient(deploymentName)
     .CreateAIAgent(
         instructions: "You are helpful assistant.",
