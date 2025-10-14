@@ -1,16 +1,16 @@
 # https://learn.microsoft.com/en-us/azure/ai-services/agents/quickstart?pivots=rest-api
 @azureAIAgentsEndpoint = {{$dotenv azureAIAgentsEndpoint}}
-# az account get-access-token --resource "https://ml.azure.com/" --query accessToken -o tsv | clip
+# az account get-access-token --resource "https://ai.azure.com/" --query accessToken -o tsv | clip
 @azureAIAgentsToken = {{$dotenv azureAIAgentsToken}}
 
 ###
-GET {{azureAIAgentsEndpoint}}/assistants?api-version=2024-12-01-preview HTTP/1.1
+GET {{azureAIAgentsEndpoint}}/assistants?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
 ###
 # @name assistantResponse
-POST {{azureAIAgentsEndpoint}}/assistants?api-version=2024-12-01-preview HTTP/1.1
+POST {{azureAIAgentsEndpoint}}/assistants?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
@@ -92,7 +92,7 @@ Authorization: Bearer {{azureAIAgentsToken}}
 
 ###
 # @name threadResponse
-POST {{azureAIAgentsEndpoint}}/threads?api-version=2024-12-01-preview HTTP/1.1
+POST {{azureAIAgentsEndpoint}}/threads?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
@@ -100,7 +100,7 @@ Authorization: Bearer {{azureAIAgentsToken}}
 
 ###
 # @name questionResponse1
-POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2024-12-01-preview HTTP/1.1
+POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
@@ -111,7 +111,7 @@ Authorization: Bearer {{azureAIAgentsToken}}
 
 ###
 # @name runResponse1
-POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs?api-version=2024-12-01-preview HTTP/1.1
+POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
@@ -121,12 +121,12 @@ Authorization: Bearer {{azureAIAgentsToken}}
 
 ###
 # @name runResponse2
-GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs/{{runResponse1.response.body.id}}?api-version=2024-12-01-preview HTTP/1.1
+GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs/{{runResponse1.response.body.id}}?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
 ###
 # @name messageResponse
-GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2024-12-01-preview HTTP/1.1
+GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
