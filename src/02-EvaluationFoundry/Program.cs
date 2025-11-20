@@ -1,8 +1,12 @@
-﻿using Azure.AI.Projects;
+﻿using Azure.AI.OpenAI;
+using Azure.AI.Projects;
 using Azure.Identity;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
+using OpenAI.Chat;
+using System.ClientModel.Primitives;
 
 var builder = new ConfigurationBuilder()
     .AddEnvironmentVariables()
@@ -13,8 +17,18 @@ IConfiguration configuration = builder.Build();
 var endpoint = configuration["AZURE_AI_FOUNDRY_PROJECT_ENDPOINT"] ?? "https://<your-endpoint>.openai.azure.com/api/projects/project01";
 var deploymentName = configuration["DEPLOYMENT_NAME"] ?? "gpt-4o";
 
-AIProjectClient foundryClient = new(new Uri(endpoint), new DefaultAzureCredential());
-var chatClient = foundryClient.GetAzureOpenAIChatClient(deploymentName: deploymentName);
+var credential = new DefaultAzureCredential();
+AIProjectClient foundryClient = new(new Uri(endpoint), credential);
+ClientConnection connection = foundryClient.GetConnection(typeof(AzureOpenAIClient).FullName!);
+
+if (!connection.TryGetLocatorAsUri(out Uri uri) || uri is null)
+{
+    throw new InvalidOperationException("Invalid URI.");
+}
+uri = new Uri($"https://{uri.Host}");
+
+AzureOpenAIClient azureOpenAIClient = new AzureOpenAIClient(uri, credential);
+ChatClient chatClient = azureOpenAIClient.GetChatClient(deploymentName: deploymentName);
 
 var chatConfiguration = new ChatConfiguration(chatClient.AsIChatClient());
 

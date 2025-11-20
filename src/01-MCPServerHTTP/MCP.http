@@ -1,0 +1,189 @@
+### Variables are loaded from http-client.env.json and http-client.private.env.json
+### You can switch between environments in VS Code
+
+###
+###   az login
+###   az account get-access-token --resource api://YOUR_CLIENT_ID --query accessToken -o tsv
+###
+
+###
+### 1. Initialize MCP Connection
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {},
+    "clientInfo": {
+      "name": "test-client",
+      "version": "1.0.0"
+    }
+  }
+}
+
+###
+### 2. List Available Tools
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/list",
+  "params": {}
+}
+
+###
+### 3. Get Random Number (with default values)
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "get_random_number",
+    "arguments": {}
+  }
+}
+
+###
+### 4. Get Random Number (with custom range)
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "get_random_number",
+    "arguments": {
+      "min": 1,
+      "max": 10
+    }
+  }
+}
+
+###
+### 5. Recommend Pet
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "recommend_pet",
+    "arguments": {
+      "message": "I want a friendly companion"
+    }
+  }
+}
+
+###
+### 6. Recommend Food
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "tools/call",
+  "params": {
+    "name": "recommend_food",
+    "arguments": {
+      "ingredient": "mushrooms"
+    }
+  }
+}
+
+###
+### 7. Get Current User Info
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "get_current_user_info",
+    "arguments": {}
+  }
+}
+
+###
+### 8. Check User Role
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "tools/call",
+  "params": {
+    "name": "has_role",
+    "arguments": {
+      "roleName": "Admin"
+    }
+  }
+}
+
+###
+### 9. Get All Claims (for debugging)
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "method": "tools/call",
+  "params": {
+    "name": "get_all_claims",
+    "arguments": {}
+  }
+}
+
+###
+### 10. Perform Audited Action
+POST {{baseUrl}}/
+Content-Type: application/json
+Accept: application/json, text/event-stream
+Authorization: Bearer {{accessToken}}
+
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "tools/call",
+  "params": {
+    "name": "perform_audited_action",
+    "arguments": {
+      "action": "Update user settings"
+    }
+  }
+}

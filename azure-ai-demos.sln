@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -32,6 +32,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-SemanticKernelContext", "src\01-SemanticKernelContext\01-SemanticKernelContext.csproj", "{339A5827-AE59-4290-8179-6D9A5CCADB31}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-MicrosoftAgentFramework", "src\01-MicrosoftAgentFramework\01-MicrosoftAgentFramework.csproj", "{716044C3-8326-4B47-B65B-CFA969E20CB6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "01-MCPServerHTTP", "src\01-MCPServerHTTP\01-MCPServerHTTP.csproj", "{D4C355EB-E592-9775-2EC9-1EA5A7CB5993}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -95,6 +97,10 @@ Global
 		{716044C3-8326-4B47-B65B-CFA969E20CB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{716044C3-8326-4B47-B65B-CFA969E20CB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{716044C3-8326-4B47-B65B-CFA969E20CB6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4C355EB-E592-9775-2EC9-1EA5A7CB5993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4C355EB-E592-9775-2EC9-1EA5A7CB5993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4C355EB-E592-9775-2EC9-1EA5A7CB5993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4C355EB-E592-9775-2EC9-1EA5A7CB5993}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -114,6 +120,7 @@ Global
 		{CFA3E3EC-BB24-4494-AC70-23F69CEBCCB2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{339A5827-AE59-4290-8179-6D9A5CCADB31} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{716044C3-8326-4B47-B65B-CFA969E20CB6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{D4C355EB-E592-9775-2EC9-1EA5A7CB5993} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9838186D-E5BD-4CD6-90A6-A5A6599DA30C}

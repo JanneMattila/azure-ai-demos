@@ -408,3 +408,6 @@ FodyWeavers.xsd
 
 **/.env
 **/venv/
+
+# HTTP client private environment files
+http-client.private.env.json
