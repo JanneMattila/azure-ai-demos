@@ -411,3 +411,6 @@ FodyWeavers.xsd
 
 # HTTP client private environment files
 http-client.private.env.json
+
+**/markdown_output/
+**/pdf_output/

@@ -17,7 +17,7 @@ var endpoint = new Uri(configuration["ENDPOINT"] ?? "https://<your-endpoint>.ope
 var deploymentName = configuration["DEPLOYMENT_NAME"] ?? "gpt-4o-mini";
 
 // Create an MCPClient for the Microsoft Learn MCP endpoint
-await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(new SseClientTransport(new()
+var mcpClient = await McpClient.CreateAsync(new HttpClientTransport(new()
 {
     Name = "Microsoft Learn",
     Endpoint = new Uri("https://learn.microsoft.com/api/mcp")
@@ -32,6 +32,7 @@ tools.Add(AIFunctionFactory.Create(GetRandomNumber));
 
 AIAgent agent = new AzureOpenAIClient(endpoint, new DefaultAzureCredential())
     .GetChatClient(deploymentName)
+    .AsIChatClient()
     .CreateAIAgent(
         instructions: "You are helpful assistant.",
         tools: tools);
