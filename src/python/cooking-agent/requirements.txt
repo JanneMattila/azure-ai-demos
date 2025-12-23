@@ -1,0 +1,6 @@
+# Microsoft Agent Framework with Azure AI integration
+# Note: --pre flag is required while Agent Framework is in preview
+agent-framework-azure-ai
+
+# Azure Identity for authentication
+azure-identity

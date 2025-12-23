@@ -414,3 +414,5 @@ http-client.private.env.json
 
 **/markdown_output/
 **/pdf_output/
+**/markdown/
+**/word/
