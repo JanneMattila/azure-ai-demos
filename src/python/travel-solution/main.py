@@ -68,7 +68,10 @@ async def post_message(chat_id: str, payload: dict):
 					project_endpoint=endpoint,
 					model_deployment_name=deployment,
 					credential=DefaultAzureCredential(),
-                	agent_name="TravelAgent"
+                	agent_name="TravelAgent",
+					# This parameter will allow to re-use latest agent version
+					# instead of creating a new one
+					use_latest_version=True
 				),
 				instructions="You are a helpful travel assistant.",
 			) as agent:
