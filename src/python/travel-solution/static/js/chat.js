@@ -68,25 +68,35 @@ document.addEventListener('DOMContentLoaded', () => {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
-      const assistantBubble = createAssistantBubble();
+      let assistantBubble = null;
       let firstChunk = true;
 
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+        const chunkText = decoder.decode(value, { stream: true });
+        if (!chunkText.trim()) continue;
+
+        buffer += chunkText;
         if (firstChunk) {
           hideTyping();
+          assistantBubble = createAssistantBubble();
           firstChunk = false;
         }
-        assistantBubble.innerHTML = marked.parse(buffer);
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        if (assistantBubble) {
+          assistantBubble.innerHTML = marked.parse(buffer);
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
       }
 
       // Flush any remaining decoded text
       const trailing = decoder.decode();
-      if (trailing) {
+      if (trailing.trim()) {
         buffer += trailing;
+        if (!assistantBubble) {
+          hideTyping();
+          assistantBubble = createAssistantBubble();
+        }
         assistantBubble.innerHTML = marked.parse(buffer);
       }
     } catch (err) {

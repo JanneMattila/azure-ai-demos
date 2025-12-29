@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
 from uuid import uuid4
@@ -14,21 +15,50 @@ from fastapi.templating import Jinja2Templates
 
 
 BASE_DIR = Path(__file__).parent
+credential: DefaultAzureCredential | None = None
 
-app = FastAPI(title="Travel Chat Demo")
 
-# Allow local development without CORS friction
-app.add_middleware(
-	CORSMiddleware,
-	allow_origins=["*"],
-	allow_credentials=True,
-	allow_methods=["*"],
-	allow_headers=["*"],
-)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+	"""Initialize and dispose shared resources."""
+	global credential
+	credential = DefaultAzureCredential()
+	yield
+
+
+app = FastAPI(title="Travel Chat Demo", lifespan=lifespan)
+
 
 # Serve static assets and templates
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+def build_agent(conversation_id) -> ChatAgent:
+	"""Create a new ChatAgent instance using shared credential and env config."""
+	endpoint = os.getenv("AZURE_AI_FOUNDRY_PROJECT_ENDPOINT")
+	deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
+
+	if not endpoint or not deployment:
+		raise HTTPException(
+			status_code=500,
+			detail="Configuration missing. Set AZURE_AI_FOUNDRY_PROJECT_ENDPOINT and MODEL_DEPLOYMENT_NAME.",
+		)
+
+	if not credential:
+		raise HTTPException(status_code=500, detail="Credential is not initialized")
+
+	return ChatAgent(
+		chat_client=AzureAIClient(
+			project_endpoint=endpoint,
+			model_deployment_name=deployment,
+			credential=credential,
+			agent_name="TravelAgent",
+			use_latest_version=True
+		),
+		instructions="You are a helpful travel assistant.",
+		store=True
+	)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -38,46 +68,32 @@ async def home(request: Request):
 
 @app.post("/chats/new")
 async def create_chat() -> JSONResponse:
-	chat_id = uuid4().hex
-	return JSONResponse({"chatId": chat_id, "redirectUrl": f"/chats/{chat_id}"})
+	conversation_id = uuid4().hex
+	agent = build_agent(conversation_id=conversation_id)
+	async with agent:
+		thread = agent.get_new_thread()
+	return JSONResponse({"chatId": conversation_id, "redirectUrl": f"/chats/{conversation_id}"})
 
 
-@app.get("/chats/{chat_id}", response_class=HTMLResponse)
-async def chat_view(request: Request, chat_id: str):
-	return templates.TemplateResponse("chat.html", {"request": request, "chat_id": chat_id})
+@app.get("/chats/{conversation_id}", response_class=HTMLResponse)
+async def chat_view(request: Request, conversation_id: str):
+	return templates.TemplateResponse("chat.html", {"request": request, "chat_id": conversation_id})
 
 
-@app.post("/api/chats/{chat_id}/messages")
-async def post_message(chat_id: str, payload: dict):
+@app.post("/api/chats/{conversation_id}/messages")
+async def post_message(conversation_id: str, payload: dict):
 	message = payload.get("message") if payload else None
 	if not message:
 		raise HTTPException(status_code=400, detail="Message is required")
 
 	async def stream_agent_response() -> AsyncIterator[str]:
-		endpoint = os.getenv("AZURE_AI_FOUNDRY_PROJECT_ENDPOINT")
-		deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
-
-		if not endpoint or not deployment:
-			yield "Configuration missing. Set AZURE_AI_FOUNDRY_PROJECT_ENDPOINT and MODEL_DEPLOYMENT_NAME.\n\n"
-			yield f"Echo: {message}\n"
-			return
+		agent = build_agent(conversation_id=conversation_id)
+		thread = agent.get_new_thread()
 
 		try:
-			async with ChatAgent(
-				chat_client=AzureAIClient(
-					project_endpoint=endpoint,
-					model_deployment_name=deployment,
-					credential=DefaultAzureCredential(),
-                	agent_name="TravelAgent",
-					# This parameter will allow to re-use latest agent version
-					# instead of creating a new one
-					use_latest_version=True
-				),
-				instructions="You are a helpful travel assistant.",
-			) as agent:
-				thread = agent.get_new_thread()
+			async with agent:
 				async for chunk in agent.run_stream(message, thread=thread):
-					if chunk.text:
+					if chunk.text and len(chunk.text) > 0:
 						yield chunk.text
 		except Exception as exc:  # pragma: no cover - graceful fallback
 			yield f"Agent call failed: {exc}\n"
