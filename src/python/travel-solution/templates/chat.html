@@ -17,7 +17,15 @@
     <span>Chat ID: {{ chat_id }}</span>
   </header>
   <main class="chat">
-    <div id="messages" class="chat-inner"></div>
+    <div id="messages" class="chat-inner">
+      <div id="typing" class="typing-row" style="display:none;">
+        <div class="bubble assistant typing">
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </div>
+      </div>
+    </div>
   </main>
   <form id="chatForm">
     <textarea id="message" placeholder="Ask about flights, hotels, or anything..."></textarea>

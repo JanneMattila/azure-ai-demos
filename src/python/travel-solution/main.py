@@ -1,9 +1,14 @@
+import os
 from pathlib import Path
+from typing import AsyncIterator
 from uuid import uuid4
 
+from agent_framework import ChatAgent
+from agent_framework.azure import AzureAIClient
+from azure.identity.aio import DefaultAzureCredential
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -43,21 +48,40 @@ async def chat_view(request: Request, chat_id: str):
 
 
 @app.post("/api/chats/{chat_id}/messages")
-async def post_message(chat_id: str, payload: dict) -> JSONResponse:
+async def post_message(chat_id: str, payload: dict):
 	message = payload.get("message") if payload else None
 	if not message:
 		raise HTTPException(status_code=400, detail="Message is required")
 
-	# Hardcoded markdown response for now
-	markdown = (
-		f"### Travel Assistant\n\n"
-		f"You asked: {message}\n\n"
-		"**Bot:** Thanks for trying this demo!\n\n"
-		"- This reply is hardcoded markdown.\n"
-		"- Swap this with your model output when ready.\n"
-	)
+	async def stream_agent_response() -> AsyncIterator[str]:
+		endpoint = os.getenv("AZURE_AI_FOUNDRY_PROJECT_ENDPOINT")
+		deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
 
-	return JSONResponse({"markdown": markdown, "chatId": chat_id})
+		yield f"### Travel Assistant\n\n"
+
+		if not endpoint or not deployment:
+			yield "Configuration missing. Set AZURE_AI_FOUNDRY_PROJECT_ENDPOINT and MODEL_DEPLOYMENT_NAME.\n\n"
+			yield f"Echo: {message}\n"
+			return
+
+		try:
+			async with ChatAgent(
+				chat_client=AzureAIClient(
+					project_endpoint=endpoint,
+					model_deployment_name=deployment,
+					credential=DefaultAzureCredential()
+				),
+				instructions="You are a helpful travel assistant.",
+			) as agent:
+				thread = agent.get_new_thread()
+				async for chunk in agent.run_stream(message, thread=thread):
+					if chunk.text:
+						yield chunk.text
+		except Exception as exc:  # pragma: no cover - graceful fallback
+			yield f"Agent call failed: {exc}\n"
+			yield f"Echo: {message}\n"
+
+	return StreamingResponse(stream_agent_response(), media_type="text/plain")
 
 
 if __name__ == "__main__":

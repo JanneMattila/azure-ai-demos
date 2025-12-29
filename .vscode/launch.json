@@ -10,6 +10,24 @@
         "port": 9091
       },
       "preLaunchTask": "func: host start"
+    },
+    {
+      "name": "Travel Chat (uvicorn)",
+      "type": "debugpy",
+      "request": "launch",
+      "python": "${workspaceFolder}/src/python/travel-solution/.venv/Scripts/python.exe",
+      "module": "uvicorn",
+      "args": [
+        "main:app",
+        "--reload"
+      ],
+      "cwd": "${workspaceFolder}/src/python/travel-solution",
+      "env": {
+        "AZURE_AI_FOUNDRY_PROJECT_ENDPOINT": "${env:AZURE_AI_FOUNDRY_PROJECT_ENDPOINT}",
+        "MODEL_DEPLOYMENT_NAME": "${env:MODEL_DEPLOYMENT_NAME}"
+      },
+      "justMyCode": false,
+      "console": "integratedTerminal"
     }
   ]
 }

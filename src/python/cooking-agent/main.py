@@ -11,8 +11,8 @@ import asyncio
 import os
 from typing import Annotated
 
+from agent_framework.azure import AzureAIClient
 from agent_framework import ChatAgent
-from agent_framework_azure_ai import AzureAIAgentClient
 from azure.identity.aio import DefaultAzureCredential
 
 
@@ -301,7 +301,7 @@ Format your responses clearly and use emojis to make them engaging.
     
     try:
         async with ChatAgent(
-            chat_client=AzureAIAgentClient(
+            chat_client=AzureAIClient(
                 project_endpoint=project_endpoint,
                 model_deployment_name=model_deployment,
                 async_credential=DefaultAzureCredential(),
