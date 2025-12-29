@@ -57,8 +57,6 @@ async def post_message(chat_id: str, payload: dict):
 		endpoint = os.getenv("AZURE_AI_FOUNDRY_PROJECT_ENDPOINT")
 		deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
 
-		yield f"### Travel Assistant\n\n"
-
 		if not endpoint or not deployment:
 			yield "Configuration missing. Set AZURE_AI_FOUNDRY_PROJECT_ENDPOINT and MODEL_DEPLOYMENT_NAME.\n\n"
 			yield f"Echo: {message}\n"
@@ -69,7 +67,8 @@ async def post_message(chat_id: str, payload: dict):
 				chat_client=AzureAIClient(
 					project_endpoint=endpoint,
 					model_deployment_name=deployment,
-					credential=DefaultAzureCredential()
+					credential=DefaultAzureCredential(),
+                	agent_name="TravelAgent"
 				),
 				instructions="You are a helpful travel assistant.",
 			) as agent:
