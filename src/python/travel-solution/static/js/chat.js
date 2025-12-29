@@ -3,7 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const messagesEl = document.getElementById('messages');
   const form = document.getElementById('chatForm');
   const textarea = document.getElementById('message');
+  const button = form?.querySelector('button');
   let typingNode = document.getElementById('typing');
+  let isStreaming = false;
+  let cancelRequested = false;
 
   function createAssistantBubble() {
     const bubble = document.createElement('div');
@@ -45,13 +48,42 @@ document.addEventListener('DOMContentLoaded', () => {
     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   }
 
+  function setButtonState(state) {
+    if (!button) return;
+    if (state === 'running') {
+      button.textContent = '■';
+      button.classList.add('stop');
+    } else {
+      button.textContent = '▶';
+      button.classList.remove('stop');
+    }
+  }
+
+  async function requestCancel() {
+    if (!isStreaming) return;
+    cancelRequested = true;
+    try {
+      await fetch(`/api/chats/${chatId}/cancel`, { method: 'POST' });
+    } catch (err) {
+      console.error('Cancel failed', err);
+    }
+  }
+
   async function submitMessage() {
+    if (isStreaming) {
+      await requestCancel();
+      return;
+    }
+
     const content = textarea.value.trim();
     if (!content) return;
     appendMessage(content, 'user');
     textarea.value = '';
 
     showTyping();
+    isStreaming = true;
+    cancelRequested = false;
+    setButtonState('running');
 
     try {
       const res = await fetch(`/api/chats/${chatId}/messages`, {
@@ -99,11 +131,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         assistantBubble.innerHTML = marked.parse(buffer);
       }
+
+      if (cancelRequested) {
+        if (!assistantBubble) {
+          hideTyping();
+          assistantBubble = createAssistantBubble();
+        }
+        assistantBubble.innerHTML = marked.parse('User cancelled');
+      }
     } catch (err) {
-      appendMessage('Network error. Please try again.', 'assistant');
+      if (!cancelRequested) {
+        appendMessage('Network error. Please try again.', 'assistant');
+      }
       console.error(err);
     } finally {
       hideTyping();
+      isStreaming = false;
+      setButtonState('idle');
+      cancelRequested = false;
     }
   }
 

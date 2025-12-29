@@ -1,4 +1,5 @@
 import os
+import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
@@ -16,6 +17,7 @@ from fastapi.templating import Jinja2Templates
 
 BASE_DIR = Path(__file__).parent
 credential: DefaultAzureCredential | None = None
+cancel_events: dict[str, asyncio.Event] = {}
 
 
 @asynccontextmanager
@@ -69,6 +71,7 @@ async def home(request: Request):
 @app.post("/chats/new")
 async def create_chat() -> JSONResponse:
 	conversation_id = uuid4().hex
+	cancel_events[conversation_id] = asyncio.Event()
 	agent = build_agent(conversation_id=conversation_id)
 	async with agent:
 		thread = agent.get_new_thread()
@@ -89,17 +92,29 @@ async def post_message(conversation_id: str, payload: dict):
 	async def stream_agent_response() -> AsyncIterator[str]:
 		agent = build_agent(conversation_id=conversation_id)
 		thread = agent.get_new_thread()
+		cancel_event = cancel_events.setdefault(conversation_id, asyncio.Event())
+		cancel_event.clear()
 
 		try:
 			async with agent:
 				async for chunk in agent.run_stream(message, thread=thread):
-					if chunk.text and len(chunk.text) > 0:
+					if cancel_event.is_set():
+						yield "User cancelled\n"
+						break
+					if chunk.text and chunk.text.strip():
 						yield chunk.text
 		except Exception as exc:  # pragma: no cover - graceful fallback
 			yield f"Agent call failed: {exc}\n"
 			yield f"Echo: {message}\n"
 
 	return StreamingResponse(stream_agent_response(), media_type="text/plain")
+
+
+@app.post("/api/chats/{conversation_id}/cancel")
+async def cancel_chat(conversation_id: str) -> JSONResponse:
+	cancel_event = cancel_events.setdefault(conversation_id, asyncio.Event())
+	cancel_event.set()
+	return JSONResponse({"status": "cancelled"})
 
 
 if __name__ == "__main__":

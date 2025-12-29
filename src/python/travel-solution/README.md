@@ -9,7 +9,6 @@ uv sync --prerelease=allow
 # Set variables
 $env:AZURE_AI_FOUNDRY_PROJECT_ENDPOINT = "https://<your-endpoint>.openai.azure.com/api/projects/project01"
 $env:MODEL_DEPLOYMENT_NAME = "gpt-4o-mini"
-#$env:AGENT_ID = "asst_1234567890"
 
 uv run uvicorn main:app
 
