@@ -1,0 +1,8 @@
+:root { color-scheme: light dark; }
+body { margin: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: radial-gradient(circle at 20% 20%, #f4f6fb 0, #f4f6fb 25%, #eef1f7 25%, #eef1f7 50%, #e6ebf3 50%, #e6ebf3 75%, #dfe6f1 75%, #dfe6f1 100%); min-height: 100vh; color: #0f172a; display: flex; align-items: center; justify-content: center; }
+.card { background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; border-radius: 18px; padding: 32px; width: min(480px, 92vw); box-shadow: 0 25px 60px rgba(15,23,42,0.1); text-align: center; }
+h1 { margin: 0 0 12px; font-size: 28px; letter-spacing: -0.5px; }
+p { margin: 0 0 24px; color: #475569; }
+button { padding: 14px 22px; background: linear-gradient(135deg, #2563eb, #7c3aed); color: white; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; box-shadow: 0 12px 30px rgba(37,99,235,0.25); transition: transform 120ms ease, box-shadow 120ms ease; }
+button:hover { transform: translateY(-1px); box-shadow: 0 15px 36px rgba(37,99,235,0.3); }
+button:active { transform: translateY(0); box-shadow: 0 10px 24px rgba(37,99,235,0.22); }

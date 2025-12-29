@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travel Chat</title>
+  <link rel="stylesheet" href="/static/css/chat.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    window.chatId = "{{ chat_id }}";
+  </script>
+  <script src="/static/js/chat.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Travel Chat</h1>
+    <span>Chat ID: {{ chat_id }}</span>
+  </header>
+  <main class="chat">
+    <div id="messages" class="chat-inner"></div>
+  </main>
+  <form id="chatForm">
+    <textarea id="message" placeholder="Ask about flights, hotels, or anything..."></textarea>
+    <button type="submit">Send</button>
+  </form>
+</body>
+</html>

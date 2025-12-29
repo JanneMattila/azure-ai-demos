@@ -9,6 +9,11 @@
         "./src/01-MCPServer/01-MCPServer.csproj"
       ]
     },
+    // "expenses": {
+    //   // https://github.com/Azure-Samples/python-mcp-demos/blob/main/servers/basic_mcp_http.py
+		// 	"url": "http://localhost:8000/mcp",
+		// 	"type": "http"
+		// },
     // "microsoft-docs": {
 		// 	"url": "https://learn.microsoft.com/api/mcp",
 		// 	"type": "http"

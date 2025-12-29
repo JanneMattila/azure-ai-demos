@@ -19,3 +19,11 @@ From [Azure-Samples](https://github.com/Azure-Samples/):
 From [microsoft](https://github.com/microsoft/):
 
 - [Multi-Agent Custom Automation Engine Solution Accelerator](https://github.com/microsoft/Multi-Agent-Custom-Automation-Engine-Solution-Accelerator)
+
+---
+
+Using MCP Inspector to inspect the MCP server:
+
+```bash
+npx @modelcontextprotocol/inspector http://localhost:8000/mcp
+```
