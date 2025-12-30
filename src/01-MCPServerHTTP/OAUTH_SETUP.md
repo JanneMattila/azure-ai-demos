@@ -116,3 +116,20 @@ app.MapMcp().RequireAuthorization("RequireMcpAccess");
 - **Certificate errors**: Trust the development certificate with `dotnet dev-certs https --trust`
 - **CORS issues**: Add CORS policy if accessing from web applications
 - **Token validation fails**: Verify tenant ID and client ID match your app registration
+
+If you need to use app roles, then here are example commands to assign app roles to service principals.
+
+```powershell
+# MCP Server App Role Assignment Example
+$mcpServerApp = Get-AzADServicePrincipal -ApplicationId "MCP_SERVER_CLIENT_ID"
+
+$mcpPermissions = $mcpServerApp.AppRoles | Where-Object { $_.Value -eq "MCP.Access" }
+
+ New-AzADServicePrincipalAppRoleAssignment `
+   -ServicePrincipalId YOUR_CLIENT_SERVICE_PRINCIPAL_ID_AKA_OBJECT_ID `
+   -ResourceId $mcpServerApp.Id `
+   -AppRoleId $mcpPermissions.Id
+```
+
+For agent identities, you can find your YOUR_CLIENT_SERVICE_PRINCIPAL_ID (ObjectId) in the Azure Portal
+under Entra and Agent ID.
