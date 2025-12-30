@@ -16,19 +16,10 @@ from fastapi.templating import Jinja2Templates
 
 
 BASE_DIR = Path(__file__).parent
-credential: DefaultAzureCredential | None = None
 cancel_events: dict[str, asyncio.Event] = {}
+agent_threads: dict[str, object] = {}
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-	"""Initialize and dispose shared resources."""
-	global credential
-	credential = DefaultAzureCredential()
-	yield
-
-
-app = FastAPI(title="Travel Chat Demo", lifespan=lifespan)
+app = FastAPI(title="Travel Chat Demo")
 
 
 # Serve static assets and templates
@@ -36,7 +27,7 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
-def build_agent(conversation_id) -> ChatAgent:
+def build_agent() -> ChatAgent:
 	"""Create a new ChatAgent instance using shared credential and env config."""
 	endpoint = os.getenv("AZURE_AI_FOUNDRY_PROJECT_ENDPOINT")
 	deployment = os.getenv("MODEL_DEPLOYMENT_NAME")
@@ -47,14 +38,11 @@ def build_agent(conversation_id) -> ChatAgent:
 			detail="Configuration missing. Set AZURE_AI_FOUNDRY_PROJECT_ENDPOINT and MODEL_DEPLOYMENT_NAME.",
 		)
 
-	if not credential:
-		raise HTTPException(status_code=500, detail="Credential is not initialized")
-
 	return ChatAgent(
 		chat_client=AzureAIClient(
 			project_endpoint=endpoint,
 			model_deployment_name=deployment,
-			credential=credential,
+			credential=DefaultAzureCredential(),
 			agent_name="TravelAgent",
 			use_latest_version=True
 		),
@@ -70,34 +58,37 @@ async def home(request: Request):
 
 @app.post("/chats/new")
 async def create_chat() -> JSONResponse:
-	conversation_id = uuid4().hex
-	cancel_events[conversation_id] = asyncio.Event()
-	agent = build_agent(conversation_id=conversation_id)
-	async with agent:
-		thread = agent.get_new_thread()
-	return JSONResponse({"chatId": conversation_id, "redirectUrl": f"/chats/{conversation_id}"})
+	chat_id = uuid4().hex
+	cancel_events[chat_id] = asyncio.Event()
+	return JSONResponse({"chatId": chat_id, "redirectUrl": f"/chats/{chat_id}"})
 
 
-@app.get("/chats/{conversation_id}", response_class=HTMLResponse)
-async def chat_view(request: Request, conversation_id: str):
-	return templates.TemplateResponse("chat.html", {"request": request, "chat_id": conversation_id})
+@app.get("/chats/{chat_id}", response_class=HTMLResponse)
+async def chat_view(request: Request, chat_id: str):
+	return templates.TemplateResponse("chat.html", {"request": request, "chat_id": chat_id})
 
 
-@app.post("/api/chats/{conversation_id}/messages")
-async def post_message(conversation_id: str, payload: dict):
+@app.post("/api/chats/{chat_id}/messages")
+async def post_message(chat_id: str, payload: dict):
 	message = payload.get("message") if payload else None
 	if not message:
 		raise HTTPException(status_code=400, detail="Message is required")
 
 	async def stream_agent_response() -> AsyncIterator[str]:
-		agent = build_agent(conversation_id=conversation_id)
-		thread = agent.get_new_thread()
-		cancel_event = cancel_events.setdefault(conversation_id, asyncio.Event())
+		agent = build_agent()
+
+		if chat_id in agent_threads:
+			agent_thread = agent_threads[chat_id]
+		else:
+			agent_thread = agent.get_new_thread()
+			agent_threads[chat_id] = agent_thread
+
+		cancel_event = cancel_events.setdefault(chat_id, asyncio.Event())
 		cancel_event.clear()
 
 		try:
 			async with agent:
-				async for chunk in agent.run_stream(message, thread=thread):
+				async for chunk in agent.run_stream(message, thread=agent_thread):
 					if cancel_event.is_set():
 						yield "User cancelled\n"
 						break
@@ -110,9 +101,9 @@ async def post_message(conversation_id: str, payload: dict):
 	return StreamingResponse(stream_agent_response(), media_type="text/plain")
 
 
-@app.post("/api/chats/{conversation_id}/cancel")
-async def cancel_chat(conversation_id: str) -> JSONResponse:
-	cancel_event = cancel_events.setdefault(conversation_id, asyncio.Event())
+@app.post("/api/chats/{chat_id}/cancel")
+async def cancel_chat(chat_id: str) -> JSONResponse:
+	cancel_event = cancel_events.setdefault(chat_id, asyncio.Event())
 	cancel_event.set()
 	return JSONResponse({"status": "cancelled"})
 

@@ -12,6 +12,8 @@ From [azure-ai-foundry](https://github.com/azure-ai-foundry):
 
 - [Azure AI Foundry Documentation Samples](https://github.com/azure-ai-foundry/foundry-samples)
 
+- [AI Agent Web App](https://github.com/azure-ai-foundry/foundry-agent-webapp/)
+
 From [Azure-Samples](https://github.com/Azure-Samples/):
 
 - [Azure Language OpenAI Conversational Agent Accelerator](https://github.com/Azure-Samples/Azure-Language-OpenAI-Conversational-Agent-Accelerator/)
