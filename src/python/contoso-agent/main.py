@@ -1,11 +1,12 @@
 import asyncio
 import os
-from agent_framework import AgentProtocol, ChatAgent, ChatMessage, TextContent
+from agent_framework import AgentProtocol, AgentThread, ChatAgent, ChatMessage, TextContent
 from agent_framework.azure import AzureAIClient
 from azure.identity.aio import DefaultAzureCredential
 from typing import Any
 
 BLUE = "\033[94m"
+YELLOW = "\033[93m"
 RED = "\033[91m"
 RESET = "\033[0m"
 
@@ -56,7 +57,7 @@ async def run_scenario() -> None:
 
 # From:
 # https://github.com/microsoft/agent-framework/blob/main/python/samples/getting_started/tools/ai_function_with_approval.py#L77
-async def execute_user_query(agent: "AgentProtocol", thread, query: str) -> None:
+async def execute_user_query(agent: ChatAgent, thread: AgentThread, query: str) -> None:
     print(f"{BLUE}User:{RESET} \n{query}\n")
     print(f"{RED}Agent:{RESET} \n", end="", flush=True)
     
@@ -70,8 +71,6 @@ async def execute_user_query(agent: "AgentProtocol", thread, query: str) -> None
         async for chunk in agent.run_stream(current_input, thread=thread):
             if chunk.text:
                 print(chunk.text, end="", flush=True)
-
-            # Collect user input requests from the stream
             if chunk.user_input_requests:
                 user_input_requests.extend(chunk.user_input_requests)
 
@@ -81,18 +80,17 @@ async def execute_user_query(agent: "AgentProtocol", thread, query: str) -> None
 
             for user_input_needed in user_input_requests:
                 print(
-                    f"\n\nUser Input Request for function from {agent.name}:"
-                    f"\n  Function: {user_input_needed.function_call.name}"
+                    f"\n{YELLOW}User Input Request for function from {agent.name}:"
+                    f"\n  Function Call ID: {user_input_needed.function_call.call_id}"
+                    f"\n  Function name: {user_input_needed.function_call.name}"
                     f"\n  Arguments: {user_input_needed.function_call.arguments}"
+                    f"\n  JSON: {user_input_needed.to_json()}"
+                    f"\n  -> Auto approving{RESET}"
                 )
 
-                # Get user approval
-                user_approval = await asyncio.to_thread(input, "\nApprove function call? (y/n): ")
-
-                # Add the user's approval response
-                current_input.append(
-                    ChatMessage(role="user", contents=[user_input_needed.create_response(user_approval.lower() == "y")])
-                )
+                approved = True
+                approval_response = user_input_needed.create_response(approved=approved)                
+                current_input.append(ChatMessage(role="user", contents=[approval_response]))
 
     # Wait for user input before proceeding
     input("\n\nPress Enter to continue...\n")
