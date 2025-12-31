@@ -1,6 +1,6 @@
 import asyncio
 import os
-from agent_framework import AgentProtocol, AgentThread, ChatAgent, ChatMessage, TextContent
+from agent_framework import AgentThread, ChatAgent, ChatMessage, TextContent
 from agent_framework.azure import AzureAIClient
 from azure.identity.aio import DefaultAzureCredential
 from typing import Any
@@ -58,7 +58,7 @@ async def run_scenario() -> None:
 # From:
 # https://github.com/microsoft/agent-framework/blob/main/python/samples/getting_started/tools/ai_function_with_approval.py#L77
 async def execute_user_query(agent: ChatAgent, thread: AgentThread, query: str) -> None:
-    print(f"{BLUE}User:{RESET} \n{query}\n")
+    print(f"{BLUE}User:\n{query}{RESET} (Thread ID: {thread.service_thread_id})\n")
     print(f"{RED}Agent:{RESET} \n", end="", flush=True)
     
     current_input: list[ChatMessage] = [ChatMessage(role="user", contents=[TextContent(text=query)])]
@@ -70,7 +70,7 @@ async def execute_user_query(agent: ChatAgent, thread: AgentThread, query: str) 
 
         async for chunk in agent.run_stream(current_input, thread=thread):
             if chunk.text:
-                print(chunk.text, end="", flush=True)
+                print(f"{RED}{chunk.text}{RESET}", end="", flush=True)
             if chunk.user_input_requests:
                 user_input_requests.extend(chunk.user_input_requests)
 
@@ -85,7 +85,7 @@ async def execute_user_query(agent: ChatAgent, thread: AgentThread, query: str) 
                     f"\n  Function name: {user_input_needed.function_call.name}"
                     f"\n  Arguments: {user_input_needed.function_call.arguments}"
                     f"\n  JSON: {user_input_needed.to_json()}"
-                    f"\n  -> Auto approving{RESET}"
+                    f"\n  -> Auto approving{RESET}\n"
                 )
 
                 approved = True
