@@ -3,12 +3,23 @@
 # az account get-access-token --resource "https://ai.azure.com/" --query accessToken -o tsv | clip
 @azureAIAgentsToken = {{$dotenv azureAIAgentsToken}}
 
-###
+@agentId = ContosoAgent
+
+#################
+# __     __  _
+# \ \   / / / |
+#  \ \ / /  | |
+#   \ V /   | |
+#    \_/    |_|
+#################
+# https://learn.microsoft.com/en-us/rest/api/aifoundry/aiprojects
+
+### Get Assistants v1
 GET {{azureAIAgentsEndpoint}}/assistants?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
-###
+### Create Assistant v1
 # @name assistantResponse
 POST {{azureAIAgentsEndpoint}}/assistants?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
@@ -90,7 +101,7 @@ Authorization: Bearer {{azureAIAgentsToken}}
   }]
 }
 
-###
+### Create Thread v1
 # @name threadResponse
 POST {{azureAIAgentsEndpoint}}/threads?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
@@ -98,7 +109,7 @@ Authorization: Bearer {{azureAIAgentsToken}}
 
 {}
 
-###
+### Create Message v1
 # @name questionResponse1
 POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
@@ -109,7 +120,7 @@ Authorization: Bearer {{azureAIAgentsToken}}
   "content": "What is the weather in Seattle?"
 }
 
-###
+### Create Message v1
 # @name runResponse1
 POST {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
@@ -119,14 +130,72 @@ Authorization: Bearer {{azureAIAgentsToken}}
   "assistant_id": "{{assistantResponse.response.body.id}}"
 }
 
-###
+### Get Run v1
 # @name runResponse2
 GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/runs/{{runResponse1.response.body.id}}?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
 
-###
+### Get Messages v1
 # @name messageResponse
 GET {{azureAIAgentsEndpoint}}/threads/{{threadResponse.response.body.id}}/messages?api-version=2025-05-01 HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer {{azureAIAgentsToken}}
+
+####################
+# __     __  ____
+# \ \   / / |___ \
+#  \ \ / /    __) |
+#   \ V /    / __/
+#    \_/    |_____|
+####################
+# https://learn.microsoft.com/en-us/azure/ai-foundry/reference/foundry-project-rest-preview
+
+### Get Agents v2
+# @name agentsResponse
+GET {{azureAIAgentsEndpoint}}/agents?api-version=2025-11-15-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+### Get Agent v2
+# @name agentResponse
+GET {{azureAIAgentsEndpoint}}/agents/{{agentId}}?api-version=2025-11-15-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+### Get Agent version v2
+# @name agentVersionResponse
+GET {{azureAIAgentsEndpoint}}/agents/{{agentId}}/versions/7?api-version=2025-11-15-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+### Create a new Agent version v2
+# @name agentVersionUpdateResponse
+POST {{azureAIAgentsEndpoint}}/agents/{{agentId}}/versions?api-version=2025-11-15-preview HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer {{azureAIAgentsToken}}
+
+{
+  "metadata": {
+    "logo": "Avatar_Default.svg",
+    "description": "",
+    "modified_at": "1767173860"
+  },
+  "object": "agent.version",
+  "name": "ContosoAgent",
+  "description": "",
+  "definition": {
+    "kind": "prompt",
+    "model": "gpt-4o-mini",
+    "instructions": "You are Contoso Corporation helpful agent responding to HR, Legal and Product documentation related questions.\n\nYou MUST use the 'kb-contoso' to answer all the questions from user. you MUST NEVER answer from your own knowledge UNDER ANY CIRCUMSTANCES. If you do not know the answer, or cannot find the answer in the provided Knowledge Base you MUST respond with \"Unfortunately, I don't know answer to that question.\".\n\nEVERY answer must ALWAYS provide citations and render them to the end of your response in table format.",
+    "tools": [
+      {
+        "type": "mcp",
+        "server_label": "kb_kb_contoso_68oqi",
+        "server_url": "https://<demo>.search.windows.net/knowledgebases/kb-contoso/mcp?api-version=2025-11-01-Preview",
+        "project_connection_id": "kb-kb-contoso-68oqi",
+        "require_approval": "never"
+      }
+    ]
+  }
+}
