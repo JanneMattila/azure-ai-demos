@@ -3,6 +3,7 @@ import os
 from agent_framework import AgentThread, ChatAgent, ChatMessage, TextContent
 from agent_framework.azure import AzureAIClient
 from azure.identity.aio import DefaultAzureCredential
+from azure.ai.projects.aio import AIProjectClient
 from typing import Any
 
 BLUE = "\033[94m"
@@ -17,9 +18,12 @@ async def run_scenario() -> None:
 
     if not endpoint or not deployment or not agent_name:
         raise ValueError("Configuration missing. Set AZURE_AI_FOUNDRY_PROJECT_ENDPOINT, MODEL_DEPLOYMENT_NAME, and AGENT_NAME.")
-
+    
     async with (
         DefaultAzureCredential() as credential,
+        AIProjectClient(
+            endpoint=endpoint,
+            credential=credential) as project_client,
         AzureAIClient(
             project_endpoint=endpoint,
             model_deployment_name=deployment,
@@ -33,7 +37,13 @@ async def run_scenario() -> None:
             chat_client=chat_client
         ) as agent,
     ):
-        thread = agent.get_new_thread()
+        # Create a conversation using OpenAI client
+        openai_client = project_client.get_openai_client()
+        conversation = await openai_client.conversations.create()
+        conversation_id = conversation.id
+        print(f"Conversation ID: {conversation_id}")
+                
+        thread = agent.get_new_thread(service_thread_id=conversation_id)
         
         await execute_user_query(agent, thread,
             "Tell me about travel policies."
