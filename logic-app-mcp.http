@@ -22,6 +22,25 @@ Accept: application/json, text/event-stream
   }
 }
 
+# Response:
+# ---------
+# {
+#   "jsonrpc": "2.0",
+#   "id": 1,
+#   "result": {
+#     "protocolVersion": "2025-06-18",
+#     "capabilities": {
+#       "tools": {
+#         "listChanged": false
+#       }
+#     },
+#     "serverInfo": {
+#       "name": "Logic Apps Remote MCP Server",
+#       "version": "1.0"
+#     }
+#   }
+# }
+
 ### 2. List Available Tools
 # @name mcpTools
 POST {{logic_app_url}}/api/mcp
@@ -36,6 +55,15 @@ Accept: application/json, text/event-stream
   "params": {}
 }
 
+# Response:
+# ---------
+# {
+#   "jsonrpc": "2.0",
+#   "id": 2,
+#   "result": {
+#     "tools": []
+#   }
+# }
 
 ### 3. List tools of a specific MCP Logic App Server
 # @name mcpLogicAppTools
@@ -50,6 +78,24 @@ Accept: application/json, text/event-stream
   "method": "tools/list",
   "params": {}
 }
+
+# Response:
+# ---------
+# {
+#   "jsonrpc": "2.0",
+#   "id": 2,
+#   "result": {
+#     "tools": [
+#       {
+#         "name": "stateful1",
+#         "description": "This workflow will give you random number.",
+#         "inputSchema": {
+#           "type": "object"
+#         }
+#       }
+#     ]
+#   }
+# }
 
 ### 4. Invoke a specific tool on a specific MCP Logic App Server
 # @name mcpLogicAppResponse
@@ -67,3 +113,19 @@ Accept: application/json, text/event-stream
     "arguments": {}
   }
 }
+
+# Response:
+# ---------
+# {
+#   "jsonrpc": "2.0",
+#   "id": 3,
+#   "result": {
+#     "content": [
+#       {
+#         "type": "text",
+#         "text": "2"
+#       }
+#     ],
+#     "isError": false
+#   }
+# }
