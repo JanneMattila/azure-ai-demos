@@ -1,0 +1,17 @@
+{
+  "metadata": {
+    "logo": "Avatar_Default.svg",
+    "description": "",
+    "modified_at": "1767173860"
+  },
+  "object": "agent.version",
+  "name": "Contoso-_NUMBER_",
+  "description": "",
+  "definition": {
+    "kind": "prompt",
+    "model": "4o-mini",
+    "instructions": "",
+    "tools": [
+    ]
+  }
+}

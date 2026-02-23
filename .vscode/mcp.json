@@ -22,5 +22,9 @@
 		// 	"url": "https://<apim>.azure-api.net/learn",
 		// 	"type": "http"
 		// }
+		// "my-apim-learn": {
+		// 	"url": "https://<apim>.azure-api.net/learn",
+		// 	"type": "http"
+		// }
   }
 }

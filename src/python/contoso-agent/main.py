@@ -5,11 +5,14 @@ from agent_framework.azure import AzureAIClient
 from azure.identity.aio import DefaultAzureCredential
 from azure.ai.projects.aio import AIProjectClient
 from typing import Any
+from dotenv import load_dotenv
 
 BLUE = "\033[94m"
 YELLOW = "\033[93m"
 RED = "\033[91m"
 RESET = "\033[0m"
+
+load_dotenv()
 
 async def run_scenario() -> None:
     endpoint = os.getenv("AZURE_AI_FOUNDRY_PROJECT_ENDPOINT")

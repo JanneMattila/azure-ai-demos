@@ -33,13 +33,13 @@ tools.Add(AIFunctionFactory.Create(GetRandomNumber));
 AIAgent agent = new AzureOpenAIClient(endpoint, new DefaultAzureCredential())
     .GetChatClient(deploymentName)
     .AsIChatClient()
-    .CreateAIAgent(
+    .AsAIAgent(
         instructions: "You are helpful assistant.",
         tools: tools);
 
 Console.WriteLine("Type your message. Ctrl + C to exit");
 
-AgentThread thread = agent.GetNewThread();
+AgentSession session = await agent.CreateSessionAsync();
 
 while (true)
 {
@@ -47,7 +47,7 @@ while (true)
     var input = Console.ReadLine() ?? string.Empty;
 
     Console.WriteLine("Response: ");
-    await foreach (var response in agent.RunStreamingAsync(input, thread))
+    await foreach (var response in agent.RunStreamingAsync(input, session))
     {
         Console.Write(response.Text);
     }
