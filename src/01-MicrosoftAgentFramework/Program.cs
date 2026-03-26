@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using ModelContextProtocol.Client;
 using OpenAI;
 using System.ComponentModel;
+using System.Net.Http.Headers;
 
 var builder = new ConfigurationBuilder()
     .AddEnvironmentVariables()
@@ -15,13 +16,17 @@ IConfiguration configuration = builder.Build();
 
 var endpoint = new Uri(configuration["ENDPOINT"] ?? "https://<your-endpoint>.openai.azure.com/");
 var deploymentName = configuration["DEPLOYMENT_NAME"] ?? "gpt-4o-mini";
+var mcpAPIKey = configuration["MCP_API_KEY"] ?? throw new InvalidOperationException("MCP_API_KEY is not set in configuration.");
 
 // Create an MCPClient for the Microsoft Learn MCP endpoint
+var httpClient = new HttpClient();
+httpClient.DefaultRequestHeaders.Authorization = 
+    new AuthenticationHeaderValue("Bearer", mcpAPIKey);
 var mcpClient = await McpClient.CreateAsync(new HttpClientTransport(new()
 {
     Name = "Microsoft Learn",
     Endpoint = new Uri("https://learn.microsoft.com/api/mcp")
-}));
+}, httpClient));
 
 // Retrieve the list of tools available on the MCP server
 var mcpTools = await mcpClient.ListToolsAsync();
