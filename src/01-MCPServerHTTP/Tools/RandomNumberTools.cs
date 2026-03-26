@@ -6,10 +6,12 @@ using System.Security.Claims;
 public class RandomNumberTools
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<RandomNumberTools> _logger;
 
-    public RandomNumberTools(IHttpContextAccessor httpContextAccessor)
+    public RandomNumberTools(IHttpContextAccessor httpContextAccessor, ILogger<RandomNumberTools> logger)
     {
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     [McpServerTool]
@@ -36,13 +38,22 @@ public class RandomNumberTools
             
             // You can also get all claims
             var allClaims = string.Join(", ", user.Claims.Select(c => $"{c.Type}={c.Value}"));
-            
+
+            _logger.LogInformation("Generated random number {RandomNumber} for user {UserName} (ID: {UserId}, Email: {Email})",
+                randomNumber, userName, userId, email);
+            _logger.LogInformation("User claims: {AllClaims}", allClaims);
+
             return $"Random number: {randomNumber}\n" +
                    $"Generated for user: {userName}\n" +
                    $"User ID: {userId}\n" +
                    $"Email: {email}";
         }
-        
+        else
+        {
+            _logger.LogInformation("Generated random number {RandomNumber} for unauthenticated user",
+                randomNumber);
+        }
+
         return $"Random number: {randomNumber} (Anonymous user)";
     }
 }

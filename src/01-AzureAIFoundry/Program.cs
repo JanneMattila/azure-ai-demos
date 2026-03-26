@@ -3,6 +3,9 @@ using Azure.AI.Projects;
 using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using OpenAI.Responses;
+using System.ClientModel.Primitives;
+using System.Diagnostics;
+using System.Text.Json;
 
 #pragma warning disable OPENAI001
 
@@ -33,19 +36,106 @@ while (true)
 
     Console.WriteLine("Response: ");
 
-    string chatResponse = string.Empty;
     responseItems.Add(ResponseItem.CreateUserMessageItem(input));
-    await foreach (StreamingResponseUpdate response in responseClient.CreateResponseStreamingAsync(responseItems))
+
+    bool hasUserInputRequests = true;
+    string chatResponse = string.Empty;
+
+    while (hasUserInputRequests)
     {
-        Console.WriteLine($"DEBUG: Received response update of type {response.GetType().Name}");
-        if (response is StreamingResponseOutputTextDeltaUpdate streamingResponseOutputTextDeltaUpdate)
+        hasUserInputRequests = false;
+        var approvalRequests = new List<McpToolCallApprovalRequestItem>();
+        var oauthConsentLinks = new List<string>();
+        IList<ResponseItem>? completedOutputItems = null;
+        chatResponse = string.Empty;
+
+        await foreach (StreamingResponseUpdate response in responseClient.CreateResponseStreamingAsync(responseItems))
         {
-            chatResponse += streamingResponseOutputTextDeltaUpdate.Delta;
-            Console.Write(streamingResponseOutputTextDeltaUpdate.Delta);
+            Console.WriteLine($"DEBUG: Received response update of type {response.GetType().Name}");
+            if (response is StreamingResponseOutputTextDeltaUpdate textDelta)
+            {
+                chatResponse += textDelta.Delta;
+                Console.Write(textDelta.Delta);
+            }
+            else if (response is StreamingResponseOutputItemDoneUpdate outputItemDone)
+            {
+                if (outputItemDone.Item is McpToolCallApprovalRequestItem approvalRequest)
+                {
+                    approvalRequests.Add(approvalRequest);
+                }
+                else
+                {
+                    var rawJson = ModelReaderWriter.Write(outputItemDone.Item, ModelReaderWriterOptions.Json);
+                    using var jsonDoc = JsonDocument.Parse(rawJson.ToMemory());
+                    var root = jsonDoc.RootElement;
+
+                    if (root.TryGetProperty("type", out var typeProperty)
+                        && typeProperty.GetString() == "oauth_consent_request"
+                        && root.TryGetProperty("consent_link", out var consentLinkProperty))
+                    {
+                        var consentLink = consentLinkProperty.GetString()!;
+                        oauthConsentLinks.Add(consentLink);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"DEBUG: Output item done - Type: {outputItemDone.Item.GetType().Name}, ID: {outputItemDone.Item.Id}");
+                    }
+                }
+            }
+            else if (response is StreamingResponseMcpListToolsFailedUpdate)
+            {
+                Console.WriteLine("DEBUG: MCP List Tools Failed (may require OAuth consent)");
+            }
+            else if (response is StreamingResponseCompletedUpdate completed)
+            {
+                Console.WriteLine($"DEBUG: Response completed - Status: {completed.Response.Status}");
+                completedOutputItems = completed.Response.OutputItems;
+            }
+        }
+
+        if (oauthConsentLinks.Count > 0)
+        {
+            hasUserInputRequests = true;
+            foreach (var consentLink in oauthConsentLinks)
+            {
+                Console.WriteLine();
+                Console.WriteLine("OAuth consent required. Opening browser...");
+                Console.WriteLine($"  URL: {consentLink}");
+                Process.Start(new ProcessStartInfo(consentLink) { UseShellExecute = true });
+            }
+
+            Console.WriteLine();
+            Console.Write("Press Enter after completing OAuth consent in the browser...");
+            Console.ReadLine();
+        }
+        else if (approvalRequests.Count > 0)
+        {
+            hasUserInputRequests = true;
+
+            // Add the model's output items so the next request has context
+            // about the tool calls being approved
+            if (completedOutputItems is not null)
+            {
+                responseItems.AddRange(completedOutputItems);
+            }
+
+            foreach (var approvalRequest in approvalRequests)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"User Input Request:");
+                Console.WriteLine($"  ID: {approvalRequest.Id}");
+                Console.WriteLine($"  -> Auto approving");
+                Console.WriteLine();
+
+                responseItems.Add(ResponseItem.CreateMcpApprovalResponseItem(approvalRequest.Id, approved: true));
+            }
         }
     }
 
-    responseItems.Add(ResponseItem.CreateAssistantMessageItem(chatResponse));
+    if (!string.IsNullOrEmpty(chatResponse))
+    {
+        responseItems.Add(ResponseItem.CreateAssistantMessageItem(chatResponse));
+    }
 
     Console.WriteLine();
     Console.WriteLine();
