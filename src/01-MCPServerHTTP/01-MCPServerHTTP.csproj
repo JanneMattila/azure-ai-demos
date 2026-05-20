@@ -12,7 +12,8 @@
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
-    <PackageReference Include="Microsoft.Identity.Web" Version="4.6.0" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="4.9.0" />
+    <PackageReference Include="Microsoft.Identity.Web.MicrosoftGraph" Version="4.9.0" />
   </ItemGroup>
 
 </Project>

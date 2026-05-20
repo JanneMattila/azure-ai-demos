@@ -1,30 +1,51 @@
 {
-  "servers": {
-    "local-recommend-mcp-server": {
-      "type": "stdio",
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "./src/01-MCPServer/01-MCPServer.csproj"
-      ]
-    },
-    // "expenses": {
-    //   // https://github.com/Azure-Samples/python-mcp-demos/blob/main/servers/basic_mcp_http.py
-		// 	"url": "http://localhost:8000/mcp",
-		// 	"type": "http"
-		// },
-    // "microsoft-docs": {
-		// 	"url": "https://learn.microsoft.com/api/mcp",
-		// 	"type": "http"
-		// },
-		// "my-apim-learn": {
-		// 	"url": "https://<apim>.azure-api.net/learn",
-		// 	"type": "http"
-		// }
-		// "my-apim-learn": {
-		// 	"url": "https://<apim>.azure-api.net/learn",
-		// 	"type": "http"
-		// }
-  }
+	"servers": {
+		"local-recommend-mcp-server": {
+			"type": "stdio",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"./src/01-MCPServer/01-MCPServer.csproj"
+			]
+		},
+		/*
+		For Windows Web Account Manager (WAM) authentication, 
+		the clientId should be the same as the one used in your application registration in Entra ID. 
+		The URL for WAM authentication typically follows this format:
+		"ms-appx-web://Microsoft.AAD.BrokerPlugin/<clientId>"
+
+		If running locally and using HTTPS with development certificate, 
+		you might need to set "NODE_TLS_REJECT_UNAUTHORIZED" to "0"
+		in the environment variables to bypass SSL certificate validation,
+		if the development certificate is self-signed.
+		*/
+		"my-http-mcp-server": {
+			"url": "http://localhost:5194/mcp",
+			"type": "http",
+			"oauth": {
+				"clientId": "${input:mcpClientClientId}",
+				"authorizationUrl": "https://login.microsoftonline.com/${input:tenantId}/oauth2/v2.0/authorize",
+				"tokenUrl": "https://login.microsoftonline.com/${input:tenantId}/oauth2/v2.0/token",
+				"scopes": ["api://${input:mcpServerClientId}/mcp.access", "offline_access"],
+			}
+		}
+	},
+	"inputs": [
+		{
+			"id": "mcpClientClientId",
+			"type": "promptString",
+			"description": "Entra ID application (client) ID for the MCP client"
+		},
+		{
+			"id": "mcpServerClientId",
+			"type": "promptString",
+			"description": "Entra ID application (client) ID for the MCP server"
+		},
+		{
+			"id": "tenantId",
+			"type": "promptString",
+			"description": "Entra ID tenant ID"
+		}
+	]
 }

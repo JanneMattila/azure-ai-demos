@@ -45,6 +45,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             },
             OnChallenge = context =>
             {
+                // Advertise Protected Resource Metadata (RFC 9728) so MCP clients can discover the auth server
+                var resourceMetadataUrl = $"{context.Request.Scheme}://{context.Request.Host}/.well-known/oauth-protected-resource";
+                context.Response.Headers.WWWAuthenticate = $"Bearer resource_metadata=\"{resourceMetadataUrl}\"";
                 TrapOnChallenge(context);
                 return Task.CompletedTask;
             }
@@ -52,7 +55,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     }, options =>
     {
         builder.Configuration.GetSection("AzureAd").Bind(options);
-    });
+    })
+    .EnableTokenAcquisitionToCallDownstreamApi(options =>
+    {
+        builder.Configuration.GetSection("AzureAd").Bind(options);
+    })
+    .AddInMemoryTokenCaches();
+
+builder.Services.AddMicrosoftGraph(options =>
+{
+    options.Scopes = "User.Read";
+});
 
 builder.Services.Configure<MicrosoftIdentityOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
 {
@@ -115,6 +128,21 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Protected Resource Metadata (RFC 9728) for MCP OAuth discovery
+app.MapGet("/.well-known/oauth-protected-resource", (HttpContext ctx) =>
+{
+    var tenantId = builder.Configuration["AzureAd:TenantId"];
+    var clientId = builder.Configuration["AzureAd:ClientId"];
+    var resource = $"{ctx.Request.Scheme}://{ctx.Request.Host}/mcp";
+    return Results.Json(new
+    {
+        resource,
+        authorization_servers = new[] { $"https://login.microsoftonline.com/{tenantId}/v2.0" },
+        scopes_supported = new[] { $"api://{clientId}/mcp.access" },
+        bearer_methods_supported = new[] { "header" }
+    });
+});
+
 // Map MCP endpoint to /mcp
 app.MapMcp("/mcp")
     .RequireAuthorization("RequireAuthenticatedUserOrApp");
@@ -140,6 +168,8 @@ static void TrapOnMessageReceived(MessageReceivedContext context)
 
 static void TrapOnTokenValidated(TokenValidatedContext context)
 {
+    Console.WriteLine((context.SecurityToken as Microsoft.IdentityModel.JsonWebTokens.JsonWebToken)?.EncodedToken);
+
     // Breakpoint here: Token has been successfully validated
     var claimsPrincipal = context.Principal;
     var securityToken = context.SecurityToken;
