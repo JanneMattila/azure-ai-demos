@@ -1,0 +1,19 @@
+{
+  "name": "myserver-mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Vanilla stdio MCP server that authenticates the current user via DefaultAzureCredential.",
+  "main": "server.js",
+  "bin": {
+    "myserver-mcp": "server.js"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@azure/identity": "^4.5.0",
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  }
+}
