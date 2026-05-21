@@ -196,6 +196,136 @@ Then restart the MCP server.
   `AZURE_CLIENT_SECRET` (or federated-credential env vars) and
   `DefaultAzureCredential` will pick them up automatically.
 
+## Publishing to a registry
+
+The package is already wired for distribution as a CLI:
+
+- [package.json](package.json) declares `"bin": { "myserver-mcp": "server.js" }`.
+- [server.js](server.js) starts with `#!/usr/bin/env node`, so once installed it
+  is directly executable.
+
+That means consumers can launch it with `npx` (no clone required) and point
+their MCP client at the published package.
+
+### One-time prep
+
+1. Open [package.json](package.json) and adjust fields for publishing:
+   - Remove `"private": true` (or set it to `false`). It is currently
+     `true` to prevent accidental publishes.
+   - Pick a unique `name`. For the public npm registry use a scoped name
+     you own, e.g. `"@your-scope/myserver-mcp"`. For an internal registry,
+     follow your org's naming convention (often a scope mapped to the
+     internal registry).
+   - Bump `version` using [SemVer](https://semver.org/) for each release.
+   - Optional but recommended: add `"files": ["server.js"]` so only the
+     runtime file is shipped (no `.env`, no tests, no local junk), and
+     add `"repository"`, `"license"`, and `"engines": { "node": ">=18" }`.
+
+2. Verify what will actually be packed before publishing:
+
+   ```powershell
+   cd src\node\mcp-server
+   npm pack --dry-run
+   ```
+
+   Make sure `.env` and any secrets are **not** in the file list. They
+   are excluded by `.gitignore`, but `npm` uses `.npmignore`/`files`
+   rules — use the `files` field above to be safe.
+
+### Publish to the public npm registry
+
+```powershell
+cd src\node\mcp-server
+npm login                  # one-time, uses https://registry.npmjs.org
+npm publish --access public  # required for first publish of a scoped package
+```
+
+Subsequent releases: bump `version` in [package.json](package.json), then
+`npm publish`.
+
+### Publish to an internal / private registry
+
+Typical options are Azure Artifacts, GitHub Packages, Verdaccio, JFrog
+Artifactory, Nexus, etc. The flow is the same — only the registry URL
+and auth differ. Create a project-local `.npmrc` (do **not** commit
+tokens) so the right registry is used for this package only:
+
+```ini
+# src/node/mcp-server/.npmrc
+@your-scope:registry=https://pkgs.your-company.example/npm/registry/
+//pkgs.your-company.example/npm/registry/:_authToken=${NPM_TOKEN}
+always-auth=true
+```
+
+Then publish:
+
+```powershell
+$env:NPM_TOKEN = "<token-from-your-registry>"
+npm publish
+```
+
+Registry-specific helpers:
+
+- **Azure Artifacts**: run `npx vsts-npm-auth -config .npmrc` (Windows)
+  to populate credentials, or use a PAT with `Packaging: Read & write`.
+- **GitHub Packages**: registry URL is
+  `https://npm.pkg.github.com`, scope must match the GitHub org/user,
+  and the token needs `write:packages`.
+
+## Consume the published server from `.mcp.json`
+
+Once the package is on a registry your users can reach, they do **not**
+need to clone this repo. Update [.mcp.json](../../../.mcp.json) (or the
+user's own MCP client config) to launch it via `npx`:
+
+```json
+{
+  "mcpServers": {
+    "myserver": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@your-scope/myserver-mcp"
+      ],
+      "env": {
+        "FORCE_INTERACTIVE_AUTH": "false"
+      }
+    }
+  }
+}
+```
+
+Notes:
+
+- `-y` auto-accepts the `npx` install prompt the first time.
+- Pin a specific version for reproducibility, e.g.
+  `"@your-scope/myserver-mcp@1.2.3"`.
+- For an internal registry, users also need an `.npmrc` that points
+  `@your-scope` at that registry (same pattern as the publish step
+  above) so `npx` can resolve the package.
+- On Windows, if `npx` is not on PATH for the MCP client, use the full
+  path or `"command": "npx.cmd"`.
+
+Users can still override behavior with environment variables:
+
+```json
+{
+  "mcpServers": {
+    "myserver": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@your-scope/myserver-mcp@^1"],
+      "env": {
+        "AZURE_TENANT_ID": "<tenant-id>",
+        "INTERACTIVE_CLIENT_ID": "<app-client-id>",
+        "FORCE_INTERACTIVE_AUTH": "true"
+      }
+    }
+  }
+}
+```
+
 ## Troubleshooting
 
 | Symptom | Fix |
