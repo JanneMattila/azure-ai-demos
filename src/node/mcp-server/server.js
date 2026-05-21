@@ -1,43 +1,58 @@
 #!/usr/bin/env node
 // Stdio MCP server using the official @modelcontextprotocol/sdk.
-// Authenticates the current user via DefaultAzureCredential from @azure/identity.
+// Authenticates the current user via @azure/identity. Falls back to an
+// interactive browser sign-in for developers with no Azure CLI / azd installed.
 
-import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DefaultAzureCredential } from "@azure/identity";
+import dotenv from "dotenv";
+import {
+    ChainedTokenCredential,
+    DefaultAzureCredential,
+    InteractiveBrowserCredential,
+    useIdentityPlugin,
+} from "@azure/identity";
+import { cachePersistencePlugin } from "@azure/identity-cache-persistence";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-// ---------- tiny .env loader ----------
+// Load .env from this file's directory (does not override existing env vars).
+// quiet: true suppresses dotenv's stdout banner, which would otherwise corrupt
+// the stdio JSON-RPC stream used by the MCP transport.
 const here = dirname(fileURLToPath(import.meta.url));
-try {
-    const envText = readFileSync(join(here, ".env"), "utf8");
-    for (const raw of envText.split(/\r?\n/)) {
-        const line = raw.trim();
-        if (!line || line.startsWith("#")) continue;
-        const eq = line.indexOf("=");
-        if (eq === -1) continue;
-        const key = line.slice(0, eq).trim();
-        let val = line.slice(eq + 1).trim();
-        if ((val.startsWith('"') && val.endsWith('"')) ||
-            (val.startsWith("'") && val.endsWith("'"))) {
-            val = val.slice(1, -1);
-        }
-        if (!(key in process.env)) process.env[key] = val;
-    }
-} catch {
-    // .env is optional
-}
+dotenv.config({ path: join(here, ".env"), quiet: true });
 
 const GRAPH_SCOPE = process.env.GRAPH_SCOPE || "https://graph.microsoft.com/.default";
 const DEFAULT_TOKEN_SCOPE =
     process.env.DEFAULT_TOKEN_SCOPE || "https://management.azure.com/.default";
+const FORCE_INTERACTIVE_AUTH = /^(1|true|yes)$/i.test(
+    process.env.FORCE_INTERACTIVE_AUTH || ""
+);
 
-const credential = new DefaultAzureCredential({
-    tenantId: process.env.AZURE_TENANT_ID,
+// Persist tokens (OS-protected) so the browser sign-in only happens once.
+useIdentityPlugin(cachePersistencePlugin);
+
+const tenantId = process.env.AZURE_TENANT_ID;
+
+// Public client id of the Azure CLI. Reusing it means devs don't need to
+// register their own app to get a working `http://localhost` redirect URI.
+const interactiveClientId =
+    process.env.INTERACTIVE_CLIENT_ID || "04b07795-8ddb-461a-bbee-02f9e1bf7b46";
+
+const interactiveCredential = new InteractiveBrowserCredential({
+    tenantId,
+    clientId: interactiveClientId,
+    redirectUri: "http://localhost",
+    tokenCachePersistenceOptions: { enabled: true, name: "myserver-mcp" },
 });
+
+const credential = FORCE_INTERACTIVE_AUTH
+    ? interactiveCredential
+    : new ChainedTokenCredential(
+        new DefaultAzureCredential({ tenantId }),
+        interactiveCredential
+    );
 
 async function getToken(scope) {
     const token = await credential.getToken(scope);

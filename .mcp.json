@@ -5,7 +5,10 @@
       "command": "node",
       "args": [
         "./src/node/mcp-server/server.js"
-      ]
+      ],
+      "env": {
+        "FORCE_INTERACTIVE_AUTH": "false"
+      }
     }
   }
 }

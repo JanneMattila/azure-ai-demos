@@ -119,6 +119,69 @@ Steps:
 secrets, certificates) belong in environment variables consumed by
 `DefaultAzureCredential`, not in committed files.
 
+## Using your own app registration
+
+By default the server uses the Azure CLI's public client id
+(`04b07795-8ddb-461a-bbee-02f9e1bf7b46`) for the interactive browser
+sign-in, so no app registration is required. If you want to use your
+own app instead — for example to scope consent, brand the consent
+screen, or pre-grant Graph permissions — set `INTERACTIVE_CLIENT_ID`
+(and optionally `AZURE_TENANT_ID`) in `.env`:
+
+```ini
+AZURE_TENANT_ID=<your-tenant-id>
+INTERACTIVE_CLIENT_ID=<your-app-client-id>
+FORCE_INTERACTIVE_AUTH=true
+```
+
+### Register the app correctly
+
+`InteractiveBrowserCredential` uses the OAuth 2.0 **authorization code
+flow with PKCE** and a loopback redirect URI. That means your app must
+be configured as a **public client** — not a confidential web app. If
+the redirect URI is registered under the **Web** platform, AAD treats
+the app as confidential and rejects the token request with:
+
+> AADSTS7000218: The request body must contain the following parameter:
+> `client_assertion` or `client_secret`.
+
+To register the app properly:
+
+1. **Microsoft Entra admin center → App registrations → New
+   registration**. Give it a name; leave "Supported account types" as
+   single-tenant (or whatever fits).
+2. **Authentication → Add a platform → Mobile and desktop
+   applications** (NOT "Web"). Add the redirect URI:
+
+   ```text
+   http://localhost
+   ```
+
+   If you accidentally added it under **Web**, delete that Web platform
+   entry — leaving it there will keep AAD treating the app as
+   confidential even when the desktop platform is also configured.
+3. On the same **Authentication** blade, scroll to **Advanced
+   settings** → set **Allow public client flows** to **Yes**.
+4. **API permissions** → add the delegated Microsoft Graph permissions
+   the tools need: `User.Read`, `GroupMember.Read.All`. Click **Grant
+   admin consent** if your tenant requires it.
+5. Copy **Application (client) ID** and **Directory (tenant) ID** from
+   **Overview** into `.env` as shown above.
+6. Do **not** create a client secret — public clients must not send
+   one. If a secret exists it is simply unused for this flow.
+
+### Force a fresh sign-in after changing the app
+
+The credential caches tokens per `clientId`, so after switching to your
+own app id, clear the cache so the next request triggers a browser
+sign-in against the new app:
+
+```powershell
+Remove-Item "$env:LOCALAPPDATA\.IdentityService\myserver-mcp*" -ErrorAction SilentlyContinue
+```
+
+Then restart the MCP server.
+
 ## Maintaining the server
 
 - **Add a tool**: call `server.registerTool(name, { title, description, inputSchema }, handler)`
@@ -138,6 +201,8 @@ secrets, certificates) belong in environment variables consumed by
 | Symptom | Fix |
 | --- | --- |
 | `CredentialUnavailableError: DefaultAzureCredential failed to retrieve a token` | Run `az login`, or set `AZURE_*` env vars. |
+| `AADSTS7000218: The request body must contain ... 'client_assertion' or 'client_secret'` | Your `INTERACTIVE_CLIENT_ID` app is registered as a confidential client. Remove the `http://localhost` redirect URI from the **Web** platform and add it under **Mobile and desktop applications** instead, then set **Allow public client flows = Yes**. See [Using your own app registration](#using-your-own-app-registration). |
 | Graph call returns `403 Insufficient privileges` | The signed-in user (or the credential's app) doesn't have the required Graph permission. Grant `User.Read` / `GroupMember.Read.All`. |
 | Tools work in terminal but not in VS Code | VS Code may have inherited an older environment. Close and reopen VS Code from a terminal where `az login` is active. |
 | Wrong tenant | Set `AZURE_TENANT_ID` in `.env` or run `az login --tenant <tenant-id>`. |
+| Interactive browser popup doesn't reappear / want to force a fresh sign-in | Delete the persisted token cache and restart the server. On Windows: `Remove-Item "$env:LOCALAPPDATA\.IdentityService\myserver-mcp*"` (macOS: `~/Library/Keychains` entries named `myserver-mcp`; Linux: `~/.IdentityService/myserver-mcp*`). The cache name is controlled by `tokenCachePersistenceOptions.name` in `server.js`. |
