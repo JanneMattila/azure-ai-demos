@@ -176,7 +176,7 @@ $guardrail = Invoke-RestMethod `
 $guardrail.properties.contentFilters | Format-Table
 
 #
-# 5. Set guardrail to agent
+# 5. Set guardrail to agent (prompt agents)
 #
 # Guardrail is part of the agent definition ("rai_config"), so it's set by creating a new agent version.
 # Use full ARM resource id of the guardrail. Note: Non-existing policy is accepted but no filtering is applied!
@@ -229,6 +229,82 @@ Invoke-RestMethod `
     -Token $accessToken `
     -Authentication Bearer `
     -Body $publish
+
+#
+# 6. Set guardrail to agent (hosted agents)
+#
+# Hosted agents deployed from code require multipart/form-data with both the definition and the code zip,
+# so download the current code zip and post it together with the updated definition.
+$hostedAgentName = "my-basic-python-thingy-agent"
+
+$hostedAgent = Invoke-RestMethod `
+    -Method GET `
+    -Uri "$azureAIAgentsEndpoint/agents/$($hostedAgentName)?api-version=$apiVersion" `
+    -Token $accessToken `
+    -Authentication Bearer
+
+$hostedLatest = $hostedAgent.versions.latest
+$hostedDefinition = $hostedLatest.definition
+$hostedDefinition | Add-Member -NotePropertyName "rai_config" -NotePropertyValue @{ rai_policy_name = $guardrail.id } -Force
+
+$hostedAgentWithGuardrail = @{
+    description = $hostedLatest.description
+    metadata    = $hostedLatest.metadata
+    definition  = $hostedDefinition
+} | ConvertTo-Json -Depth 20
+
+if ($null -ne $hostedDefinition.code_configuration) {
+    # Hosted agent deployed from code
+    $codeZipFile = Join-Path $env:TEMP "$hostedAgentName.zip"
+    Invoke-RestMethod `
+        -Method GET `
+        -Uri "$azureAIAgentsEndpoint/agents/$hostedAgentName/code:download?api-version=$apiVersion&agent_version=$($hostedLatest.version)" `
+        -Headers @{ "Accept" = "application/zip" } `
+        -Token $accessToken `
+        -Authentication Bearer `
+        -OutFile $codeZipFile
+    $codeZipSha256 = (Get-FileHash -Path $codeZipFile -Algorithm SHA256).Hash.ToLowerInvariant()
+
+    $multipart = [System.Net.Http.MultipartFormDataContent]::new()
+    $metadataPart = [System.Net.Http.StringContent]::new($hostedAgentWithGuardrail, [System.Text.Encoding]::UTF8, "application/json")
+    $multipart.Add($metadataPart, "metadata")
+    $codePart = [System.Net.Http.ByteArrayContent]::new([System.IO.File]::ReadAllBytes($codeZipFile))
+    $codePart.Headers.ContentType = "application/zip"
+    $multipart.Add($codePart, "code", "$hostedAgentName.zip")
+
+    $hostedAgentVersion = Invoke-RestMethod `
+        -Method POST `
+        -Uri "$azureAIAgentsEndpoint/agents/$hostedAgentName/versions?api-version=$apiVersion" `
+        -Headers @{ "x-ms-code-zip-sha256" = $codeZipSha256 } `
+        -Token $accessToken `
+        -Authentication Bearer `
+        -Body $multipart
+
+    Remove-Item $codeZipFile
+}
+else {
+    # Hosted agent deployed from container image
+    $hostedAgentVersion = Invoke-RestMethod `
+        -Method POST `
+        -Uri "$azureAIAgentsEndpoint/agents/$hostedAgentName/versions?api-version=$apiVersion" `
+        -ContentType "application/json" `
+        -Token $accessToken `
+        -Authentication Bearer `
+        -Body $hostedAgentWithGuardrail
+}
+$hostedAgentVersion.version
+$hostedAgentVersion.definition.rai_config
+
+# Hosted agent versions are provisioned asynchronously, so wait until the new version is active
+while ($hostedAgentVersion.status -eq "creating") {
+    Start-Sleep -Seconds 10
+    $hostedAgentVersion = Invoke-RestMethod `
+        -Method GET `
+        -Uri "$azureAIAgentsEndpoint/agents/$hostedAgentName/versions/$($hostedAgentVersion.version)?api-version=$apiVersion" `
+        -Token $accessToken `
+        -Authentication Bearer
+    $hostedAgentVersion.status
+}
 
 # Delete the demo agent
 Invoke-RestMethod `
