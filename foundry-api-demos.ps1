@@ -8,16 +8,6 @@ $project = "proj-default"
 
 $azureAIAgentsEndpoint = "https://$foundry.services.ai.azure.com/api/projects/$project"
 
-$body = $content -replace '_NUMBER_', $i
-
-Invoke-RestMethod `
-    -Method POST `
-    -Uri "$azureAIAgentsEndpoint/agents/Contoso-$i/versions?api-version=2025-11-15-preview" `
-    -Headers @{ "Content-Type" = "application/json" } `
-    -Token $accessToken `
-    -Authentication Bearer `
-    -Body $body
-
 #
 # Microsoft Foundry REST API examples
 # https://ai.azure.com/api-reference

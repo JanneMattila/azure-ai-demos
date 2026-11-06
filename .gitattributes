@@ -1,0 +1,48 @@
+# Normalize line endings to LF in the repository; let Git pick platform line endings on checkout
+* text=auto
+
+# Scripts that must keep LF line endings (e.g., bash fails on CRLF)
+*.sh      text eol=lf
+*.bash    text eol=lf
+Dockerfile text eol=lf
+
+# Windows-specific files that should keep CRLF line endings
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
+*.sln     text eol=crlf
+
+# Source and text files
+*.cs      text diff=csharp
+*.csproj  text
+*.py      text diff=python
+*.js      text
+*.ts      text
+*.ps1     text
+*.json    text
+*.jsonl   text
+*.http    text
+*.md      text diff=markdown
+*.txt     text
+*.toml    text
+*.yml     text
+*.yaml    text
+*.html    text diff=html
+*.css     text diff=css
+
+# Binary files
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.webp    binary
+*.pdf     binary
+*.zip     binary
+*.docx    binary
+*.xlsx    binary
+*.pptx    binary
+*.dll     binary
+*.exe     binary
+*.wav     binary
+*.mp3     binary
+*.mp4     binary
